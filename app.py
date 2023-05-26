@@ -1,24 +1,15 @@
-from flask import Flask, jsonify, request
 import requests
+import json
 
-app = Flask(__name__)
+message = {
+    "content": "Hi!, I'm from Google!"
+}
 
-@app.route('/api/send', methods=['POST'])
-def send_message():
-    # Get the JSON message from the request body
-    message = request.get_json()
+# Make a POST request to send the message
+url = "http://localhost:5000/api/send"
+response = requests.post(url, json=message)
 
-    # Send the message to the Node.js container
-    response = requests.post('http://nodejs-container:3000/api/send', json=message)
+# Retrieve the JSON response
+response_data = response.json()
 
-    return jsonify(response.json())
-
-@app.route('/api/receive', methods=['GET'])
-def receive_message():
-    # Request the message from the Node.js container
-    response = requests.get('http://nodejs-container:3000/api/receive')
-
-    return jsonify(response.json())
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+print(response)
