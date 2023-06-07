@@ -17,13 +17,15 @@ Per provare il funzionamento basta connettersi a "http://localhost:5000/api/rece
 
 All'interno della cartella p2pLink/server, eseguire i comandi:
 
+```console
 docker network create my-network
 docker build -t flask-app .
 docker run -p 5000:5000 --network my-network --name p2p-link flask-app
+```
 
 Se tutto va bene, dovresti avere un docker funzionante chiamato p2p-link.
 
-Per inviare un messaggio, puoi inviare una post request a "http://localhost:5000/api/send". Il messaggio è un JSON con il seguente formato.
+Per inviare un messaggio, puoi inviare una post request a "http://localhost:5000/api/send". Il messaggio è un json con il seguente formato.
 
 {
     "source":"Adam",
@@ -31,4 +33,4 @@ Per inviare un messaggio, puoi inviare una post request a "http://localhost:5000
     "content":"Hello world"
 }
 
-Per ricevere il primo messaggio in coda, si fa una get request del tipo "http://localhost:5000/api/deliver?id=Bob".
+Per ricevere l'ultimo messaggio ricevuto, si fa una get request del tipo "http://localhost:5000/api/deliver?id=Bob"
