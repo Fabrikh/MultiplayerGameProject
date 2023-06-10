@@ -2,7 +2,9 @@ import requests
 import json
 
 message = {
-    "content": "Hi!, I'm from Google!"
+    "source":"Adam",
+    "destination":"Bob",
+    "content":"ciaociao va?"
 }
 
 # Make a POST request to send the message
@@ -13,3 +15,4 @@ response = requests.post(url, json=message)
 response_data = response.json()
 
 print(response)
+print(response_data)
