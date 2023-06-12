@@ -42,14 +42,24 @@ Per ricevere l'ultimo messaggio ricevuto, si fa una get request del tipo "http:/
 
 ## Prova p2pWebSocket
 
-Il server non si avvia ancora con Docker. Per ora provare con l'ambiente virtuale Python .venv.
-
-Per avviare il server sulla porta 3000 (ad esempio), basta eseguire:
+Per avviare con docker, eseguire i comandi in Server/chat
 
 ```console
-python app.py 3000
+docker-compose rm -f
+docker-compose pull
+docker-compose up --build -d
 ```
 
-A questo punto il client si aprirà su "http://localhost:3000".
+Per accedere con i client, andare rispettivamente su
 
-Il file config/links.json descrive i collegamenti tra i server 3000,3001 e 3002. Si possono modificare a proprio piacimento.
+"http://localhost:3000/"
+
+"http://localhost:3001/"
+
+"http://localhost:3002/"
+
+Per avviare un server in locale (eg. su porta 3000), il comando è 
+
+```console
+python app.py 3000 ./config/linksLocal.json
+```

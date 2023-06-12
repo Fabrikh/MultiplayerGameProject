@@ -1,0 +1,20 @@
+version: '3'
+services:
+  server1:
+    build:
+      context: .
+      dockerfile: ./docker/server1/Dockerfile
+    ports:
+     - "3000:3000"
+  server2:
+    build:
+      context: .
+      dockerfile: ./docker/server2/Dockerfile
+    ports:
+     - "3001:3001"
+  server3:
+    build:
+      context: .
+      dockerfile: ./docker/server3/Dockerfile
+    ports:
+     - "3002:3002"

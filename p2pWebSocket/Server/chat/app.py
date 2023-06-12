@@ -10,7 +10,7 @@ socketio = SocketIO(app)
 
 links = []
 
-with open("./config/links.json") as linkConfigFile:
+with open(sys.argv[2]) as linkConfigFile:
     
     data = json.load(linkConfigFile)
     links = data[sys.argv[1]]
@@ -50,9 +50,9 @@ def handle_message(message):
 
 if __name__ == '__main__':
     
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
                
-        socketio.run(app, host='0.0.0.0', port=sys.argv[1])
+        socketio.run(app, host='0.0.0.0', port=sys.argv[1], allow_unsafe_werkzeug=True)
     else:
         
         raise Exception("Wrong number of arguments provided!")
