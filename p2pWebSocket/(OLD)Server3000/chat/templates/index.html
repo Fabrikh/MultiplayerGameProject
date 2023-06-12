@@ -19,6 +19,7 @@
 
         // WebSocket message event
         socket.on('message', function(data) {
+            console.log("socketio.on node\n")
             mex = JSON.parse(data);
             document.getElementById("chat").innerHTML += "<div>" + mex.id + ": " + mex.message + "</div>";
         });

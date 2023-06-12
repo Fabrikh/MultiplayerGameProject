@@ -2,15 +2,24 @@ from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
 import json
 import requests
+import sys
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
 socketio = SocketIO(app)
 
+links = []
+
+with open("./config/links.json") as linkConfigFile:
+    
+    data = json.load(linkConfigFile)
+    links = data[sys.argv[1]]
+    print(links)
+    
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html',SOCKET_PORT=sys.argv[1])
 
 @app.route('/api/send', methods=['POST'])
 def send_message():
@@ -35,8 +44,15 @@ def handle_message(message):
     response = json.dumps(res)
     socketio.emit('message', response)
 
-    response = requests.post('http://localhost:3001/api/send', json=res)
+    for link in links:
+        response = requests.post(f'http://{link}/api/send', json=res)
 
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=3000)
+    
+    if len(sys.argv) == 2:
+               
+        socketio.run(app, host='0.0.0.0', port=sys.argv[1])
+    else:
+        
+        raise Exception("Wrong number of arguments provided!")
