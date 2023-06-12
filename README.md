@@ -63,3 +63,19 @@ Per avviare un server in locale (eg. su porta 3000), il comando è
 ```console
 python app.py 3000 ./config/linksLocal.json
 ```
+
+## Prova beb
+
+Build and run p2p before beb
+
+cd into /beb
+
+```console
+docker network create my-network
+docker build -t flask-app .
+docker run -p 5000:5000 --network my-network --name p2p-link flask-app
+```
+
+To test beb:
+Send a message like { "source":"Adam", "destination":"BEB", "content":"Hello world" } to "http://localhost:5001/api/BEB_Broadcast"
+Now you can deliver the message from any process id in "pi" list like "http://localhost:5000/api/BEB_Deliver?id=p1"
