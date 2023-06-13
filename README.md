@@ -73,9 +73,9 @@ cd into /beb
 ```console
 docker network create my-network
 docker build -t flask-app .
-docker run -p 5000:5000 --network my-network --name p2p-link flask-app
+docker run -p 5001:5001 --network my-network --name beb flask-app
 ```
 
 To test beb:
 Send a message like { "source":"Adam", "destination":"BEB", "content":"Hello world" } to "http://localhost:5001/api/BEB_Broadcast"
-Now you can deliver the message from any process id in "pi" list like "http://localhost:5000/api/BEB_Deliver?id=p1"
+Now you can deliver the message from any process id in "pi" list like "http://localhost:5001/api/BEB_Deliver?id=p1"
