@@ -1,11 +1,14 @@
 {
-    "3000":[
-        "localhost:3001","localhost:3002"
-    ],
-    "3001":[
-        "localhost:3000","localhost:3002"
-    ],
-    "3002":[
-        "localhost:3000","localhost:3001"
-    ]
+    "3000":{
+        "id": "localhost:3000",
+        "links":["localhost:3001","localhost:3002"]
+    },
+    "3001":{
+        "id": "localhost:3001",
+        "links":["localhost:3000","localhost:3002"]
+    },
+    "3002":{
+        "id": "localhost:3002",
+        "links":["localhost:3000","localhost:3001"]
+    }
 }

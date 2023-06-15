@@ -14,7 +14,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Expose the port that the Flask application listens on
-EXPOSE 3001
+EXPOSE 3002
 
 # Start the Flask application
-CMD ["python", "app.py","3001","./config/linksDocker.json"]
+CMD ["python", "app.py","3002","./config/linksDocker.json"]

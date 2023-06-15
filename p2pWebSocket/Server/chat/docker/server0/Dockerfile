@@ -4,6 +4,8 @@ FROM python:3.9
 # Set the working directory in the container
 WORKDIR /app
 
+RUN ls -l
+
 # Copy the requirements file to the working directory
 COPY requirements.txt .
 
@@ -14,7 +16,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Expose the port that the Flask application listens on
-EXPOSE 3002
+EXPOSE 3000
 
 # Start the Flask application
-CMD ["python", "app.py","3002","./config/linksDocker.json"]
+CMD ["python", "app.py","3000","./config/linksDocker.json"]

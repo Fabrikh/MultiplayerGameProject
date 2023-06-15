@@ -35,7 +35,7 @@
                 let txtar = document.getElementById("text_area");
                 let text = txtar.value;
                 txtar.value = "";
-                socket.emit('message', JSON.stringify({ type: "MESSAGE", message: text, id: myId }));
+                socket.emit('message', JSON.stringify({ header: [],type: "MESSAGE", message: text, id: myId }));
 
             } else if(afterSend){
 

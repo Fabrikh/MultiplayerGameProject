@@ -47,7 +47,7 @@ Per avviare con docker, eseguire i comandi in Server/chat
 ```console
 docker-compose rm -f
 docker-compose pull
-docker-compose up --build -d
+docker-compose up --build
 ```
 
 Per accedere con i client, andare rispettivamente su
