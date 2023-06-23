@@ -14,7 +14,7 @@ P2PLINK = 'http://localhost:5000/api/'
 pi = ["1","2","3","4","5","6","7","8","9","10"] # Lista dei nodi
 alive = ["1","2","3","4","5","6","7","8","9","10"] # Lista dei nodi vivi
 detected = [] # Lista dei nodi morti
-TIMEOUT = 5
+TIMEOUT = 10
 
 
 
@@ -39,8 +39,8 @@ def detect_failures():
     while(True):
         message = requests.get(P2PLINK + 'deliver?id=FD').json()
         p = message["source"]
-        print(p)
-        if p != "none" and p not in alive:
+
+        if str(p) != "None" and p not in alive:
             alive.append(p)
             print("Node " + str(p) + " is alive")
 
