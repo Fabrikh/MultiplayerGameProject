@@ -1,10 +1,13 @@
+#import grequests
+import requests
+from requests_futures.sessions import FuturesSession
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
 import json
-import requests
+
 import sys
 import logging
-from threading import Timer
+from threading import Timer,Lock
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -14,6 +17,7 @@ app.config['SECRET_KEY'] = 'your-secret-key'
 socketio = SocketIO(app)
 
 MY_ADDRESS = ""
+linksLock = Lock()
 LINKS = {}
 
 def eprint(*args, **kwargs):
@@ -34,10 +38,14 @@ class P2PLink():
         message["header"] = ["P2PLink"] + message["header"]
         message["serverSender"] = MY_ADDRESS
         
-        try:
-            requests.post(f'http://{destination}/api/deliver', json=message)
-        except ConnectionAbortedError:
-            pass
+        try:           
+            session = FuturesSession()
+            session.post(f'http://{destination}/api/deliver', json=message)
+            
+        except Exception as e:
+            
+            eprint(f"[EXCEPTION] {type(e)} found!")
+            eprint(e)
 
 class BestEffortBroadcast():
     
@@ -48,14 +56,16 @@ class BestEffortBroadcast():
         
         message["header"] = ["BEBroadcast"] + message["header"]
         
-        for link in LINKS.union({MY_ADDRESS}):
-            self.p2p.send(link,message.copy())
+        with linksLock:
+            for link in LINKS.union({MY_ADDRESS}):
+                self.p2p.send(link,message.copy())
             
 class PerfectFailureDetector():
     
     def __init__(self,p2pLink,deltaTime):
         self.p2p = p2pLink
         self.alive = set(LINKS.copy())
+        self.aliveLock = Lock()
         self.detected = set()
         #self.saluta()
         
@@ -65,28 +75,26 @@ class PerfectFailureDetector():
         
     def timeout(self):
         
-        eprint("TIMEOUT!!")
         
-        
-        
-        for process in LINKS:
-            eprint(f"LNK{process}")
-            if process not in self.alive and process not in self.detected:
-                
-                self.detected.add(process)
-                self.emitCrash(process)
+        with self.aliveLock:
+            eprint("[PFD] Timeout!!")
+            with linksLock:
+                for process in LINKS:
+                    
+                    if process not in self.alive and process not in self.detected:
+                        
+                        self.detected.add(process)
+                        self.emitCrash(process)
+                    
+                    
+                    self.p2p.send(process,{"header":["PFD"],"type": "HEARTBEAT_REQUEST"})
+                    
             
+            self.alive = set()
+            #eprint("RESET!!")
             
-            self.p2p.send(process,{"header":["PFD"],"type": "HEARTBEAT_REQUEST"})
-            
-        
-        self.alive = set()
-        
-        
-        
-        eprint("RESET!!")
-        self.timer = Timer(self.deltaTime, self.timeout)
-        self.timer.start()
+            self.timer = Timer(self.deltaTime, self.timeout)
+            self.timer.start()
         
     def sendHBReply(self,process):
         
@@ -95,16 +103,16 @@ class PerfectFailureDetector():
         
     def receiveHBReply(self,process):
         
-        
-        
-        eprint(f"HBR{process}")
+        #eprint(f"HBR{process}")
         self.alive.add(process)
-        eprint(f"HBR{self.alive}")
+        #eprint(f"HBR{self.alive}")
         
         
     def emitCrash(self,process):
         
-        for destination in self.alive:
+        eprint(f"[EMITTING CRASH] {self.alive}")
+        
+        for destination in self.alive.union({MY_ADDRESS}):
             requests.post(f'http://{destination}/api/crash', json={"type":"CRASH","process":process})
           
         
@@ -121,7 +129,7 @@ def deliver_message():
     # Get the JSON message from the request body
     res = request.get_json()
     serverSender = res["serverSender"]
-    eprint(f"MESSAGE: {res}")
+    #eprint(f"MESSAGE: {res}")
     
     head = ""
     
@@ -165,7 +173,8 @@ def deliver_message():
             
         if res["type"] == "HEARTBEAT_REPLY":
             
-            pfd.receiveHBReply(serverSender)   
+            with pfd.aliveLock:
+                pfd.receiveHBReply(serverSender)   
             
             eprint(f"[{MY_ADDRESS}] PFD Heartbeat Reply Delivery from {serverSender}")
             return "received"
@@ -174,16 +183,16 @@ def deliver_message():
 def crash_message():
     # Get the JSON message from the request body
     res = request.get_json()
-    eprint(f"CRASH_MESSAGE: {res}")
+    #eprint(f"CRASH_MESSAGE: {res}")
     
     if res["type"] == "CRASH":
         
         crashedProcess = res["process"]
         
-        eprint("AAAAAAAAAAAAAAAAAAAAAAAAAA")
-        eprint(f"Ha crashato {crashedProcess}")
+        eprint(f"[CRASH NOTIFICATION] Ha crashato {crashedProcess}")
         
-        LINKS.remove(crashedProcess)
+        with linksLock:
+            LINKS.remove(crashedProcess)
         
         return "crash_ACK"
     

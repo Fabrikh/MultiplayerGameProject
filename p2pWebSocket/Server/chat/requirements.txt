@@ -1,4 +1,5 @@
 Flask==2.0.1
 requests==2.26.0
+requests_futures
 Flask_SocketIO==5.3.4
 thread6==0.2.0
