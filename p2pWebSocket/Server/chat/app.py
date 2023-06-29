@@ -28,102 +28,102 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 with open(sys.argv[2]) as linkConfigFile:
-    
+
     data = json.load(linkConfigFile)
     print(data[sys.argv[1]])
     print(data[sys.argv[1]]["id"])
     MY_ADDRESS = data[sys.argv[1]]["id"]
     LINKS = set(data[sys.argv[1]]["links"])
-    
+
 class P2PLink():
-        
+
     def send(self,destination,message):
-        
+
         message["header"] = ["P2PLink"] + message["header"]
-        
-        try:           
+
+        try:
             session = FuturesSession()
             session.post(f'http://{destination}/api/deliver', json=message)
-            
+
         except Exception as e:
-            
+
             eprint(f"[EXCEPTION] {type(e)} found!")
             eprint(e)
 
 class BestEffortBroadcast():
-    
+
     def __init__(self,p2pLink):
         self.p2p = p2pLink
-        
+
     def broadcast(self,message):
-        
+
         message["header"] = ["BEBroadcast"] + message["header"]
-        
+
         with linksLock:
             for link in LINKS.union({MY_ADDRESS}):
                 self.p2p.send(link,message.copy())
-            
+
 class PerfectFailureDetector():
-    
+
     def __init__(self,p2pLink,deltaTime):
         self.p2p = p2pLink
         self.alive = set(LINKS.copy())
         self.aliveLock = Lock()
         self.detected = set()
         #self.saluta()
-        
+
         self.deltaTime = deltaTime
         self.timer = Timer(deltaTime, self.timeout)
         self.timer.start()
-        
+
     def timeout(self):
-        
-        
+
+
         with self.aliveLock:
             eprint("[PFD] Timeout!!")
             with linksLock:
                 for process in LINKS:
-                    
+
                     if process not in self.alive and process not in self.detected:
-                        
+
                         self.detected.add(process)
                         self.emitCrash(process)
-                    
-                    
+
+
                     self.p2p.send(process,{"header":["PFD"],"type": "HEARTBEAT_REQUEST", "serverSender": MY_ADDRESS})
-                    
-            
+
+
             self.alive = set()
             #eprint("RESET!!")
-            
+
             self.timer = Timer(self.deltaTime, self.timeout)
             self.timer.start()
-        
+
     def sendHBReply(self,process):
-        
+
         self.p2p.send(process,{"header":["PFD"],"type": "HEARTBEAT_REPLY", "serverSender": MY_ADDRESS})
-        
-        
+
+
     def receiveHBReply(self,process):
-        
+
         #eprint(f"HBR{process}")
         self.alive.add(process)
         #eprint(f"HBR{self.alive}")
-        
-        
+
+
     def emitCrash(self,process):
-        
+
         eprint(f"[EMITTING CRASH] {self.alive}")
 
-        try:           
+        try:
             session = FuturesSession()
             session.post(f'http://{MY_ADDRESS}/api/crash', json={"type":"CRASH","process":process})
-        
+
         except Exception as e:
-        
+
             eprint(f"[EXCEPTION] {type(e)} found!")
             eprint(e)
-          
+
 class ReliableBroadcast():
 
     def __init__ (self, beb, pfd):
@@ -133,7 +133,7 @@ class ReliableBroadcast():
         self.aliveLock = Lock()
         self.fromP = {s: [] for s in LINKS}
 
-    
+
     def broadcast(self, message):
 
         message["header"] = ["RBroadcast"] + message["header"]
@@ -149,7 +149,7 @@ class ReliableBroadcast():
                 with self.aliveLock:
                     if sender not in self.alive:
                         beb.broadcast(message)
-    
+
     def crashed(self, process):
         with self.aliveLock:
             self.alive.discard(process)
@@ -162,8 +162,80 @@ class ReliableBroadcast():
             if mex["messageID"] == message["messageID"] and mex["serverSender"] == message["serverSender"]:
                 return False
         return True
-    
-    
+
+class Consensus():
+    def __init__(self, beb, pfd):
+        self.beb = beb
+        self.pfd = pfd
+        self.correct = set(LINKS.copy())
+        self.correct.append(MY_ADDRESS)
+        self.correctLock = Lock()
+        self.received_from = set()
+        self.received_from[0] = set(LINKS.copy())
+        self.received_from[0].append(MY_ADDRESS)
+        self.proposals = set()
+        self.decision = null
+        self.round = 1
+
+    def crashed(self, process):
+        with self.correctLock:
+            self.correct.discard(process)
+
+    def propose_value(self, value):
+        self.proposals[1].append(value)
+        proposal = {"type": "PROPOSAL", "sender": MY_ADDRESS, "round": 1, "value": self.proposals[1]}
+        beb.broadcast(proposal)
+
+    def deliver_proposal(self, message):
+        sender = message["sender"]
+        value = message["value"]
+        round = message["round"]
+        self.received_from[round].append(sender)
+        self.proposals[round].append(value)
+        if set(self.correct).issubset(set(self.received_from[self.round])) and decision == null:
+            self.decide_min()
+
+    def deliver_decided(self, message):
+        if message["sender"] in self.correct or message["sender"] == MY_ADDRESS:
+            if decision == null:
+                value = message["value"]
+                self.decision = value
+                decision_value = {"type": "DECIDED", "value": value}
+                beb.broadcast(decision_value)
+                self.decide(decision_value)
+
+    def decide_min(self):
+        if self.received_from[self.round] == self.received_from[self.round-1]:
+            self.decision = min(self.proposals[self.round])
+            decision_value = {"type": "DECIDED", "value": self.decision}
+            beb.broadcast(decision_value)
+            self.decide(decision_value)
+        elif
+            self.round = self.round + 1;
+            proposal = {"type": "PROPOSAL",  "sender": MY_ADDRESS, "round": self.round, "value": self.proposals[self.round-1]}
+            beb.broadcast(decision_value)
+
+    def decide(self, decision_value):
+
+        eprint(f"[DECIDED VALUE] {self.decision}")
+
+        try:
+            session = FuturesSession()
+            session.post(f'http://{MY_ADDRESS}/api/consensus', json={"type":"DECISION","process":process})
+
+        except Exception as e:
+
+            eprint(f"[EXCEPTION] {type(e)} found!")
+            eprint(e)
+
+
+    def get_consensus_value(self):
+        if self.decision != null:
+            return self.decision
+        return None
+
+
+
 
 
 
@@ -171,6 +243,7 @@ p2p = P2PLink()
 beb = BestEffortBroadcast(p2p)
 pfd = PerfectFailureDetector(p2p,deltaTime=5.0)
 rb = ReliableBroadcast(beb, pfd)
+consensus = Consensus(beb, pfd)
 
 @app.route('/')
 def index():
@@ -182,59 +255,60 @@ def deliver_message():
     res = request.get_json()
     serverSender = res["serverSender"]
     #eprint(f"MESSAGE: {res}")
-    
+
     head = ""
-    
+
     if res["header"]:
-        
+
         head = res["header"].pop(0)
-    
+
     else:
         return "not delivered"
-        
+
     if head == "P2PLink":
-                    
+
         eprint(f"[{MY_ADDRESS}] P2P Link Delivery")
-        
+
         requests.post(f'http://{MY_ADDRESS}/api/deliver', json=res)
-        
+
         return "delivered"
-    
+
     if head == "BEBroadcast":
-        
+
         rb.deliver(res)
-        
+
         eprint(f"[{MY_ADDRESS}] BEB Delivery")
         return "received"
-    
+
     if head == "PFD":
-        
+
         #requests.post(f'http://{MY_ADDRESS}/api/deliver', json=res)
-        #response = json.dumps(res) 
-        
+        #response = json.dumps(res)
+
         if res["type"] == "HEARTBEAT_REQUEST":
-            
+
             pfd.sendHBReply(serverSender)
             eprint(f"[{MY_ADDRESS}] PFD Heartbeat Request Delivery from {serverSender}")
             return "received"
-            
+
         if res["type"] == "HEARTBEAT_REPLY":
-            
+
             with pfd.aliveLock:
-                pfd.receiveHBReply(serverSender)   
-            
+                pfd.receiveHBReply(serverSender)
+
             eprint(f"[{MY_ADDRESS}] PFD Heartbeat Reply Delivery from {serverSender}")
             return "received"
-        
+
     if head == "RBroadcast":
 
         #if serverSender != MY_ADDRESS and (not res["header"] or res["header"][0] == "BEBroadcast"):
-        response = json.dumps(res)    
+        response = json.dumps(res)
         socketio.emit('message', response, namespace = '/')
-        #print("Delivered message by: ", res["id"])    
+        #print("Delivered message by: ", res["id"])
 
         eprint(f"[{MY_ADDRESS}] RB Delivery")
         return "received"
+
 
 
 
@@ -243,11 +317,11 @@ def crash_message():
     # Get the JSON message from the request body
     res = request.get_json()
     #eprint(f"CRASH_MESSAGE: {res}")
-    
+
     if res["type"] == "CRASH":
-        
+
         crashedProcess = res["process"]
-        
+
         eprint(f"[CRASH NOTIFICATION] Ha crashato {crashedProcess}")
 
         with linksLock:
@@ -255,10 +329,12 @@ def crash_message():
 
         rb.crashed(crashedProcess)
 
-        
+
         return "crash_ACK"
-    
-    
+
+
+
+
 @socketio.on('message')
 def handle_message(message):
 
@@ -275,9 +351,9 @@ def handle_message(message):
 
     response = json.dumps(res)
     socketio.emit('message', response)
-    
+
     ## send message outside
-    
+
     res["header"] = []
     res["serverSender"] = MY_ADDRESS
 
@@ -290,10 +366,10 @@ def handle_message(message):
 
 
 if __name__ == '__main__':
-    
+
     if len(sys.argv) == 3:
-               
+
         socketio.run(app, host='0.0.0.0', port=sys.argv[1], allow_unsafe_werkzeug=True)
     else:
-        
+
         raise Exception("Wrong number of arguments provided!")
