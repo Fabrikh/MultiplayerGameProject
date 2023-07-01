@@ -24,6 +24,9 @@ LINKS = {}
 messageID = 0
 idLock = Lock()
 
+lastDecision = None
+decisionID = 0
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -168,13 +171,14 @@ class Consensus():
         self.beb = beb
         self.pfd = pfd
         self.correct = set(LINKS.copy())
-        self.correct.append(MY_ADDRESS)
+        self.correct.add(MY_ADDRESS)
         self.correctLock = Lock()
-        self.received_from = set()
-        self.received_from[0] = set(LINKS.copy())
-        self.received_from[0].append(MY_ADDRESS)
-        self.proposals = set()
-        self.decision = null
+        self.received_from = []
+        self.received_from.append(set(LINKS.copy()))
+        self.received_from[0].add(MY_ADDRESS)
+        self.proposals = []
+        self.proposals.append(set())
+        self.decision = None
         self.round = 1
 
     def crashed(self, process):
@@ -182,46 +186,73 @@ class Consensus():
             self.correct.discard(process)
 
     def propose_value(self, value):
-        self.proposals[1].append(value)
-        proposal = {"type": "PROPOSAL", "sender": MY_ADDRESS, "round": 1, "value": self.proposals[1]}
+        eprint(f"proposal: {value}")
+        
+        self.proposals.append(set())
+
+        self.proposals[1].add(value)
+        valueData = json.dumps(list(self.proposals[1]))
+        proposal = {"header": [], "type": "PROPOSAL",  "serverSender": MY_ADDRESS, "round": 1, "value": valueData, "id": decisionID}
         beb.broadcast(proposal)
 
     def deliver_proposal(self, message):
-        sender = message["sender"]
-        value = message["value"]
+        eprint("deliver propose")
+        sender = message["serverSender"]
+        value = set(json.loads(message["value"]))
         round = message["round"]
-        self.received_from[round].append(sender)
-        self.proposals[round].append(value)
-        if set(self.correct).issubset(set(self.received_from[self.round])) and decision == null:
+
+        try:
+            _ = self.received_from[round]
+        except IndexError:
+            self.received_from.append(set())
+
+        try:
+            _ = self.proposals[round]
+        except IndexError:
+            self.proposals.append(set())
+
+        self.received_from[round].add(sender)
+        self.proposals[round].update(value)
+        if set(self.correct).issubset(set(self.received_from[round])) and self.decision == None:
             self.decide_min()
 
     def deliver_decided(self, message):
-        if message["sender"] in self.correct or message["sender"] == MY_ADDRESS:
-            if decision == null:
-                value = message["value"]
-                self.decision = value
-                decision_value = {"type": "DECIDED", "value": value}
-                beb.broadcast(decision_value)
-                self.decide(decision_value)
+        if message["id"] == decisionID:
+            eprint("deliver decide")
+            if message["serverSender"] in self.correct and message["serverSender"] != MY_ADDRESS:
+                if self.decision == None:
+                    value = message["value"]
+                    self.decision = value
+                    decision_value = {"header": [], "type": "DECIDED", "value": value,  "serverSender": MY_ADDRESS, "id": decisionID}
+                    beb.broadcast(decision_value)
+                    self.decide(self.decision)
 
     def decide_min(self):
-        if self.received_from[self.round] == self.received_from[self.round-1]:
-            self.decision = min(self.proposals[self.round])
-            decision_value = {"type": "DECIDED", "value": self.decision}
-            beb.broadcast(decision_value)
-            self.decide(decision_value)
-        elif
-            self.round = self.round + 1;
-            proposal = {"type": "PROPOSAL",  "sender": MY_ADDRESS, "round": self.round, "value": self.proposals[self.round-1]}
-            beb.broadcast(decision_value)
+
+        try:
+            _ = self.received_from[self.round]
+            _ = self.proposals[self.round]
+
+            if self.received_from[self.round] == self.received_from[self.round-1]:
+                self.decision = min(self.proposals[self.round])
+                decision_value = {"header": [], "type": "DECIDED", "value": self.decision,  "serverSender": MY_ADDRESS, "id": decisionID}
+                beb.broadcast(decision_value)
+                self.decide(self.decision)
+            else:
+                self.round = self.round + 1
+                valueData = json.dumps(list(self.proposals[self.round - 1]))
+                proposal = {"header": [], "type": "PROPOSAL",  "serverSender": MY_ADDRESS, "round": self.round, "value": valueData, "id": decisionID}
+                beb.broadcast(proposal)
+
+        except IndexError:
+            eprint("[EXCEPTION] INDEX found!")
 
     def decide(self, decision_value):
-
-        eprint(f"[DECIDED VALUE] {self.decision}")
+        eprint(f"[DECIDED VALUE] {decision_value}")
 
         try:
             session = FuturesSession()
-            session.post(f'http://{MY_ADDRESS}/api/consensus', json={"type":"DECISION","process":process})
+            session.post(f'http://{MY_ADDRESS}/api/consensus', json={"type":"DECISION","decision":decision_value})
 
         except Exception as e:
 
@@ -229,10 +260,17 @@ class Consensus():
             eprint(e)
 
 
-    def get_consensus_value(self):
-        if self.decision != null:
-            return self.decision
-        return None
+    def reset(self):
+        self.correct = set(LINKS.copy())
+        self.correct.add(MY_ADDRESS)
+        self.correctLock = Lock()
+        self.received_from = []
+        self.received_from.append(set(LINKS.copy()))
+        self.received_from[0].add(MY_ADDRESS)
+        self.proposals = []
+        self.proposals.append(set())
+        self.decision = None
+        self.round = 1
 
 
 
@@ -275,7 +313,17 @@ def deliver_message():
 
     if head == "BEBroadcast":
 
-        rb.deliver(res)
+        if res["type"] == "RESPONSE":
+            rb.deliver(res)
+
+        if res["type"] == "STARTPROPOSAL":
+            consensus.propose_value(res["message"])
+
+        if res["type"] == "PROPOSAL":
+            consensus.deliver_proposal(res)
+
+        if res["type"] == "DECIDED":
+            consensus.deliver_decided(res)
 
         eprint(f"[{MY_ADDRESS}] BEB Delivery")
         return "received"
@@ -327,12 +375,30 @@ def crash_message():
         with linksLock:
             LINKS.discard(crashedProcess)
 
+        consensus.crashed(crashedProcess)
         rb.crashed(crashedProcess)
 
 
         return "crash_ACK"
 
+@app.route('/api/consensus', methods=['POST'])
+def decision_message():
+    global lastDecision
+    global decisionID
+    # Get the JSON message from the request body
+    res = request.get_json()
+    #eprint(f"CRASH_MESSAGE: {res}")
 
+    if res["type"] == "DECISION":
+
+        lastDecision = res["decision"]
+
+        eprint(f"[CONSENSUS NOTIFICATION] Scelto il valore: {lastDecision}")
+
+        decisionID += 1
+        consensus.reset()
+
+        return "decision_ACK"
 
 
 @socketio.on('message')
@@ -345,7 +411,7 @@ def handle_message(message):
         res = { "type": "RESPONSE", "message": "User " + mex["id"] + " connected to the chat!", "id": "all" }
 
     else:
-        res = { "type": "RESPONSE", "message": mex["message"], "id": mex["id"] }
+        res = { "type": "STARTPROPOSAL", "message": mex["message"], "id": mex["id"] }
 
     #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
 
@@ -361,7 +427,11 @@ def handle_message(message):
         res["messageID"] = messageID
         messageID += 1
 
-    rb.broadcast(res)
+    if res["type"] == "RESPONSE":
+        rb.broadcast(res)
+    else:
+        res["message"] = int(res["message"])
+        consensus.propose_value(res["message"])
     #p2p.send(LINKS[0],res)
 
 
