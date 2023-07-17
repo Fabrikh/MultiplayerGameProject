@@ -186,7 +186,7 @@ class Consensus():
             self.correct.discard(process)
 
     def propose_value(self, value):
-        eprint(f"proposal: {value}")
+        eprint(f"[CONSENSUS] proposal: {value}")
         
         self.proposals.append(set())
 
@@ -196,7 +196,7 @@ class Consensus():
         beb.broadcast(proposal)
 
     def deliver_proposal(self, message):
-        eprint("deliver propose")
+        eprint("[CONSENSUS] deliver propose")
         sender = message["serverSender"]
         value = set(json.loads(message["value"]))
         round = message["round"]
@@ -218,7 +218,7 @@ class Consensus():
 
     def deliver_decided(self, message):
         if message["id"] == decisionID:
-            eprint("deliver decide")
+            eprint("[CONSENSUS] deliver decide")
             if message["serverSender"] in self.correct and message["serverSender"] != MY_ADDRESS:
                 if self.decision == None:
                     value = message["value"]
@@ -271,11 +271,6 @@ class Consensus():
         self.proposals.append(set())
         self.decision = None
         self.round = 1
-
-
-
-
-
 
 p2p = P2PLink()
 beb = BestEffortBroadcast(p2p)
@@ -411,7 +406,7 @@ def handle_message(message):
         res = { "type": "RESPONSE", "message": "User " + mex["id"] + " connected to the chat!", "id": "all" }
 
     else:
-        res = { "type": "STARTPROPOSAL", "message": mex["message"], "id": mex["id"] }
+        res = { "type": "RESPONSE", "message": mex["message"], "id": mex["id"] }
 
     #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
 
@@ -426,12 +421,15 @@ def handle_message(message):
     with idLock:
         res["messageID"] = messageID
         messageID += 1
-
-    if res["type"] == "RESPONSE":
-        rb.broadcast(res)
-    else:
+        
+    #eprint(f"MSG: {res}")
+        
+    if res["type"] == "STARTPROPOSAL":
         res["message"] = int(res["message"])
         consensus.propose_value(res["message"])
+    else:
+        rb.broadcast(res)
+        
     #p2p.send(LINKS[0],res)
 
 

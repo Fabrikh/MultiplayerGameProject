@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <style>
+        .no-resize {
+            resize: none;
+        }
+        .connect-message {
+            font-weight: bold;
+        }
+        .chat {
+            margin-top: 20px;
+        }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script type="text/javascript">
         var socket;
@@ -21,35 +32,43 @@
             // WebSocket message event
             socket.on('message', function(data) {
                 mex = JSON.parse(data);
-                document.getElementById("chat").innerHTML += "<div>" + mex.id + ": " + mex.message + "</div>";
+                if(mex.id == "all"){
+                    document.getElementById("chat").innerHTML += `<div class="connect-message">${mex.message}</div>`;
+                }else{
+                    document.getElementById("chat").innerHTML += `<div>${mex.id}: ${mex.message}</div>`;
+                }
+                    
             });
 
         }
-
-        let afterSend = false
+        
         function send_message(event) {
-            let key = event.which;
-            if (key === 13) {
 
-                afterSend = true
-                let txtar = document.getElementById("text_area");
-                let text = txtar.value;
-                txtar.value = "";
-                socket.emit('message', JSON.stringify({ header: [],type: "MESSAGE", message: text, id: myId }));
+            let textarea = event.target;
 
-            } else if(afterSend){
+            if (event.key === "Enter") {
 
-                afterSend = false
-                let txtar = document.getElementById("text_area");
-                txtar.value = "";
+                event.preventDefault();
+                let text = cleanInput(textarea.value);
+                
+                if(text != ""){
+                    socket.emit('message', JSON.stringify({ header: [],type: "MESSAGE", message: text, id: myId }));
+                }
+                
+                textarea.value = "";
             }
+        }
+
+        // funzione per pulire l'input (potrebbe servire in futuro)
+        function cleanInput(text){
+            return text.trim();
         }
     </script>
   </head>
   <body onload="start_ws()">
     <div id="chat_div">
-        <textarea id="text_area" onkeypress="send_message(event)"></textarea>
-        <div id="chat"></div>    
+        <textarea id="text_area" class="no-resize" cols="50" onkeypress="send_message(event)"></textarea>
+        <div id="chat" class="chat"></div>    
     </div>
   </body>
 </html>
