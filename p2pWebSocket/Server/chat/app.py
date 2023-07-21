@@ -4,6 +4,7 @@ from requests_futures.sessions import FuturesSession
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
 import json
+import random
 
 import sys
 import logging
@@ -69,12 +70,11 @@ class BestEffortBroadcast():
 class PerfectFailureDetector():
 
     def __init__(self,p2pLink,deltaTime):
+        
         self.p2p = p2pLink
         self.alive = set(LINKS.copy())
         self.aliveLock = Lock()
         self.detected = set()
-        #self.saluta()
-
         self.deltaTime = deltaTime
         self.timer = Timer(deltaTime, self.timeout)
         self.timer.start()
@@ -97,7 +97,6 @@ class PerfectFailureDetector():
 
 
             self.alive = set()
-            #eprint("RESET!!")
 
             self.timer = Timer(self.deltaTime, self.timeout)
             self.timer.start()
@@ -167,6 +166,7 @@ class ReliableBroadcast():
         return True
 
 class Consensus():
+    
     def __init__(self, beb, pfd):
         self.beb = beb
         self.pfd = pfd
@@ -227,6 +227,16 @@ class Consensus():
                     beb.broadcast(decision_value)
                     self.decide(self.decision)
 
+    def choose(prop):
+        
+        
+        proposals = list(map(lambda x: json.loads(x),prop))
+        eprint("[CONSENSUS PROPOSALS] ##",proposals)
+        
+        if type(proposals[0]) == int:
+            return min(proposals)
+        
+
     def decide_min(self):
 
         try:
@@ -234,7 +244,7 @@ class Consensus():
             _ = self.proposals[self.round]
 
             if self.received_from[self.round] == self.received_from[self.round-1]:
-                self.decision = min(self.proposals[self.round])
+                self.decision = Consensus.choose(self.proposals[self.round])
                 decision_value = {"header": [], "type": "DECIDED", "value": self.decision,  "serverSender": MY_ADDRESS, "id": decisionID}
                 beb.broadcast(decision_value)
                 self.decide(self.decision)
@@ -272,6 +282,29 @@ class Consensus():
         self.decision = None
         self.round = 1
 
+class TotalOrderBroadcast():
+    
+    def __init__(self,rb):
+        self.rb = rb
+        self.unordered = set()
+        self.delivered = set()
+        self.round = 1
+        self.wait = False
+        
+    def broadcast(self, message):
+
+        message["header"] = ["TOBroadcast"] + message["header"]
+        rb.broadcast(message)
+        
+    def onDeliver(self, message):
+        
+        if not message in self.delivered:
+            self.unordered.add((message["serverSender"],message))
+            
+    def onDecide(self):
+        # TO-DO
+        pass
+        
 p2p = P2PLink()
 beb = BestEffortBroadcast(p2p)
 pfd = PerfectFailureDetector(p2p,deltaTime=5.0)
@@ -353,8 +386,6 @@ def deliver_message():
         return "received"
 
 
-
-
 @app.route('/api/crash', methods=['POST'])
 def crash_message():
     # Get the JSON message from the request body
@@ -424,11 +455,9 @@ def handle_message(message):
         
     #eprint(f"MSG: {res}")
         
-    if res["type"] == "STARTPROPOSAL":
-        res["message"] = int(res["message"])
-        consensus.propose_value(res["message"])
-    else:
-        rb.broadcast(res)
+    consensus.propose_value(json.dumps(random.randint(0,100)))
+    #consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
+    rb.broadcast(res)
         
     #p2p.send(LINKS[0],res)
 
