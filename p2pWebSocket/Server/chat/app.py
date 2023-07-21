@@ -228,7 +228,7 @@ class Consensus():
                     self.decide(self.decision)
 
     def choose(prop):
-        
+        # TO-DO: Implement a system to choose among List proposals
         
         proposals = list(map(lambda x: json.loads(x),prop))
         eprint("[CONSENSUS PROPOSALS] ##",proposals)
@@ -282,28 +282,6 @@ class Consensus():
         self.decision = None
         self.round = 1
 
-class TotalOrderBroadcast():
-    
-    def __init__(self,rb):
-        self.rb = rb
-        self.unordered = set()
-        self.delivered = set()
-        self.round = 1
-        self.wait = False
-        
-    def broadcast(self, message):
-
-        message["header"] = ["TOBroadcast"] + message["header"]
-        rb.broadcast(message)
-        
-    def onDeliver(self, message):
-        
-        if not message in self.delivered:
-            self.unordered.add((message["serverSender"],message))
-            
-    def onDecide(self):
-        # TO-DO
-        pass
         
 p2p = P2PLink()
 beb = BestEffortBroadcast(p2p)
@@ -404,7 +382,6 @@ def crash_message():
         consensus.crashed(crashedProcess)
         rb.crashed(crashedProcess)
 
-
         return "crash_ACK"
 
 @app.route('/api/consensus', methods=['POST'])
@@ -454,9 +431,11 @@ def handle_message(message):
         messageID += 1
         
     #eprint(f"MSG: {res}")
-        
-    consensus.propose_value(json.dumps(random.randint(0,100)))
+      
+    # TEST CONSENSUS  
+    #consensus.propose_value(json.dumps(random.randint(0,100)))
     #consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
+    
     rb.broadcast(res)
         
     #p2p.send(LINKS[0],res)
