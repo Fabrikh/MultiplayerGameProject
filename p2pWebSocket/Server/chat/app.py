@@ -228,13 +228,17 @@ class Consensus():
                     self.decide(self.decision)
 
     def choose(prop):
-        # TO-DO: Implement a system to choose among List proposals
+        
+        # Choose a common value for everyone
         
         proposals = list(map(lambda x: json.loads(x),prop))
         eprint("[CONSENSUS PROPOSALS] ##",proposals)
         
         if type(proposals[0]) == int:
             return min(proposals)
+        
+        if type(proposals[0]) == list or type(proposals[0]) == set:
+            return proposals[random.randint(0,len(proposals)-1)]
         
 
     def decide_min(self):
@@ -434,7 +438,7 @@ def handle_message(message):
       
     # TEST CONSENSUS  
     #consensus.propose_value(json.dumps(random.randint(0,100)))
-    #consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
+    consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
     
     rb.broadcast(res)
         
