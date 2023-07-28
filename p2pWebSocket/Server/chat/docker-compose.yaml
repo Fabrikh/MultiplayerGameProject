@@ -27,3 +27,11 @@ services:
      - "3002:3002"
     networks:
       - backend
+  loadbalancer:
+    build:
+      context: ./loadBalancer/
+      dockerfile: ./Dockerfile
+    ports:
+      - "3005:3005"
+    networks:
+      - backend

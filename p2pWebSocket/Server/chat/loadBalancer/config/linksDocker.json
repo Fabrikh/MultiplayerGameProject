@@ -1,0 +1,3 @@
+{
+    "links":["server0:3000", "server1:3001","server2:3002"]
+}

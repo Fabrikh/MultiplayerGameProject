@@ -3,6 +3,7 @@ import requests
 from requests_futures.sessions import FuturesSession
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
+
 import json
 import random
 
@@ -17,13 +18,14 @@ log.setLevel(logging.ERROR)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 MY_ADDRESS = ""
 linksLock = Lock()
 LINKS = {}
 messageID = 0
 idLock = Lock()
+LOADBALANCER = ""
 
 lastDecision = None
 decisionID = 0
@@ -38,6 +40,7 @@ with open(sys.argv[2]) as linkConfigFile:
     print(data[sys.argv[1]]["id"])
     MY_ADDRESS = data[sys.argv[1]]["id"]
     LINKS = set(data[sys.argv[1]]["links"])
+    LOADBALANCER =data["loadbalancer"]
 
 class P2PLink():
 
@@ -295,6 +298,7 @@ consensus = Consensus(beb, pfd)
 
 @app.route('/')
 def index():
+    eprint("CLIENT CONNECTED")
     return render_template('index.html',SOCKET_PORT=sys.argv[1])
 
 @app.route('/api/deliver', methods=['POST'])
@@ -315,7 +319,7 @@ def deliver_message():
 
     if head == "P2PLink":
 
-        eprint(f"[{MY_ADDRESS}] P2P Link Delivery")
+        #eprint(f"[{MY_ADDRESS}] P2P Link Delivery")
 
         requests.post(f'http://{MY_ADDRESS}/api/deliver', json=res)
 
@@ -335,7 +339,7 @@ def deliver_message():
         if res["type"] == "DECIDED":
             consensus.deliver_decided(res)
 
-        eprint(f"[{MY_ADDRESS}] BEB Delivery")
+        #eprint(f"[{MY_ADDRESS}] BEB Delivery")
         return "received"
 
     if head == "PFD":
@@ -346,7 +350,7 @@ def deliver_message():
         if res["type"] == "HEARTBEAT_REQUEST":
 
             pfd.sendHBReply(serverSender)
-            eprint(f"[{MY_ADDRESS}] PFD Heartbeat Request Delivery from {serverSender}")
+            #eprint(f"[{MY_ADDRESS}] PFD Heartbeat Request Delivery from {serverSender}")
             return "received"
 
         if res["type"] == "HEARTBEAT_REPLY":
@@ -354,7 +358,7 @@ def deliver_message():
             with pfd.aliveLock:
                 pfd.receiveHBReply(serverSender)
 
-            eprint(f"[{MY_ADDRESS}] PFD Heartbeat Reply Delivery from {serverSender}")
+            #eprint(f"[{MY_ADDRESS}] PFD Heartbeat Reply Delivery from {serverSender}")
             return "received"
 
     if head == "RBroadcast":
@@ -364,7 +368,7 @@ def deliver_message():
         socketio.emit('message', response, namespace = '/')
         #print("Delivered message by: ", res["id"])
 
-        eprint(f"[{MY_ADDRESS}] RB Delivery")
+        #eprint(f"[{MY_ADDRESS}] RB Delivery")
         return "received"
 
 
@@ -443,6 +447,21 @@ def handle_message(message):
     rb.broadcast(res)
         
     #p2p.send(LINKS[0],res)
+
+
+@socketio.on('disconnect')
+def handle_disconnect():
+
+        try:
+            eprint(f"[DISCONNECTED]")
+            
+            session = FuturesSession()
+            session.post(f'http://{LOADBALANCER}/api/disconnection', json={'port': MY_ADDRESS})
+
+        except Exception as e:
+
+            eprint(f"[EXCEPTION] {type(e)} found!")
+            eprint(e)
 
 
 if __name__ == '__main__':
