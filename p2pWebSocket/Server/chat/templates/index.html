@@ -40,6 +40,10 @@
                     
             });
 
+            socket.on('disconnect', function() {
+                window.location.href = "http://localhost:3005";    
+            });
+
         }
         
         function send_message(event) {

@@ -123,6 +123,7 @@ class PerfectFailureDetector():
         try:
             session = FuturesSession()
             session.post(f'http://{MY_ADDRESS}/api/crash', json={"type":"CRASH","process":process})
+            session.post(f'http://{LOADBALANCER}/api/crash', json={'process': process})
 
         except Exception as e:
 
@@ -298,8 +299,13 @@ consensus = Consensus(beb, pfd)
 
 @app.route('/')
 def index():
-    eprint("CLIENT CONNECTED")
-    return render_template('index.html',SOCKET_PORT=sys.argv[1])
+    #eprint(f"RICHIESTA", request.args.get('redirected'))
+    #eprint(f"LOCAL ADDR", request.remote_addr)
+
+    if(request.args.get('redirected')):
+        return render_template('index.html',SOCKET_PORT=sys.argv[1])
+
+    return "You don't have permissions!"
 
 @app.route('/api/deliver', methods=['POST'])
 def deliver_message():
@@ -411,7 +417,18 @@ def decision_message():
 
         return "decision_ACK"
 
+@socketio.on('connect')
+def handle_connection():
+    try:
+        eprint(f"[CLIENT CONNECTED]")
+        
+        session = FuturesSession()
+        session.post(f'http://{LOADBALANCER}/api/connection', json={'port': MY_ADDRESS})
 
+    except Exception as e:
+
+        eprint(f"[EXCEPTION] {type(e)} found!")
+        eprint(e)
 @socketio.on('message')
 def handle_message(message):
 
