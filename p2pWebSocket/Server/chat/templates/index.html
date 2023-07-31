@@ -15,9 +15,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script type="text/javascript">
         var socket;
-        const myId = "Lobby#001_Client#01" + Math.floor(Math.random() * (100));
+        var myId = "";
+
+        function isValidUsername(username) {
+            return /^[A-Za-z0-9]+$/.test(username);
+        }
+
         function start_ws() {
-          
+
+            let isValid = false;
+            let username = null;
+            while(!isValid){
+                username = prompt("Please enter your username (only letters and numbers allowed):");
+                if (username !== null && username.trim() !== '') {
+                    isValid = isValidUsername(username);
+                    if (!isValid) 
+                        alert("Invalid username. Please use only letters and numbers.");
+                } else {
+                    alert("You must enter a valid username to continue.");
+                }
+            }
+            
+            myId = username;
+
             socket = io.connect('http://localhost:'+{{SOCKET_PORT}}+'/');
 
             // WebSocket connection event
@@ -32,12 +52,34 @@
             // WebSocket message event
             socket.on('message', function(data) {
                 mex = JSON.parse(data);
-                if(mex.id == "all"){
-                    document.getElementById("chat").innerHTML += `<div class="connect-message">${mex.message}</div>`;
-                }else{
-                    document.getElementById("chat").innerHTML += `<div>${mex.id}: ${mex.message}</div>`;
-                }
+                if(mex.type == "INVALID"){
+                    isValid = false;
+                    username = null;
+                    alert("Username already in use, please use another one");
+                    while(!isValid){
+                        username = prompt("Please enter your username (only letters and numbers allowed):");
+                        if (username !== null && username.trim() !== '') {
+                            isValid = isValidUsername(username);
+                            if (!isValid) 
+                                alert("Invalid username. Please use only letters and numbers.");
+                        } else {
+                            alert("You must enter a valid username to continue.");
+                        }
+                    }
                     
+                    myId = username;
+
+                    var connection = { type: "CONNECTION", message: "Hi! I'm " + myId, id: myId};
+                    var conn = JSON.stringify(connection);
+                    socket.emit('message', conn);
+                } else{
+                    if(mex.id == "all"){
+                        document.getElementById("chat").innerHTML += `<div class="connect-message">${mex.message}</div>`;
+                    }else{
+                        document.getElementById("chat").innerHTML += `<div>${mex.id}: ${mex.message}</div>`;
+                    }                    
+                }
+   
             });
 
             socket.on('disconnect', function() {
