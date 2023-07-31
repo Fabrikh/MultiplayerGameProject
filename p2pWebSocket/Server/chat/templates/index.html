@@ -113,7 +113,7 @@
   </head>
   <body onload="start_ws()">
     <div id = "video_div">
-        <video width="320" height="240" autoplay>
+        <video width="320" height="240" controls>
             <source src="{{ url_for('static', filename="test.webm") }}" type="video/webm">
             <source src="{{ url_for('static', filename="test.mp4") }}" type="video/mp4">
             Your browser does not support the video tag.
