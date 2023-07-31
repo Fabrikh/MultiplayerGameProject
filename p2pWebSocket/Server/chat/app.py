@@ -339,7 +339,7 @@ def deliver_message():
 
     if head == "BEBroadcast":
 
-        if res["type"] == "RESPONSE":
+        if res["type"] == "RESPONSE" or res["type"] == "DISCONNECTION":
             rb.deliver(res)
 
         if res["type"] == "STARTPROPOSAL":
@@ -511,19 +511,28 @@ def handle_message(message):
 
 @socketio.on('disconnect')
 def handle_disconnect():
-
+    global messageID
     client_id = request.sid
+    username = connected_clients[client_id]
     connected_clients.pop(client_id, None)
-    try:
-        eprint(f"[DISCONNECTED]")
+
+    res = { "type": "DISCONNECTION", "message": "User " + username + " disconnected from the chat!", "id": "all" }
+
+    response = json.dumps(res)
+    socketio.emit('message', response)
+
+        ## send message outside
+
+    res["header"] = []
+    res["serverSender"] = MY_ADDRESS
+
+    with idLock:
+        res["messageID"] = messageID
+        messageID += 1
+            
+        #eprint(f"MSG: {res}")
         
-        session = FuturesSession()
-        session.post(f'http://{LOADBALANCER}/api/disconnection', json={'port': MY_ADDRESS})
-
-    except Exception as e:
-
-        eprint(f"[EXCEPTION] {type(e)} found!")
-        eprint(e)
+    rb.broadcast(res)
 
 
 if __name__ == '__main__':
