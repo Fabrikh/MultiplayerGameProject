@@ -32,6 +32,8 @@ LOADBALANCER = ""
 lastDecision = None
 decisionID = 0
 
+connected_clients = {}
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -191,14 +193,14 @@ class Consensus():
         with self.correctLock:
             self.correct.discard(process)
 
-    def propose_value(self, value):
+    def propose_value(self, value, id, socket, sender):
         eprint(f"[CONSENSUS] proposal: {value}")
         
         self.proposals.append(set())
 
         self.proposals[1].add(value)
         valueData = json.dumps(list(self.proposals[1]))
-        proposal = {"header": [], "type": "PROPOSAL",  "serverSender": MY_ADDRESS, "round": 1, "value": valueData, "id": decisionID}
+        proposal = {"header": [], "type": "PROPOSAL",  "serverSender": MY_ADDRESS, "round": 1, "value": valueData, "id": decisionID, "proposedId": id, "socket": socket, "starter": sender}
         beb.broadcast(proposal)
 
     def deliver_proposal(self, message):
@@ -220,7 +222,7 @@ class Consensus():
         self.received_from[round].add(sender)
         self.proposals[round].update(value)
         if set(self.correct).issubset(set(self.received_from[round])) and self.decision == None:
-            self.decide_min()
+            self.decide_min(message)
 
     def deliver_decided(self, message):
         if message["id"] == decisionID:
@@ -229,9 +231,10 @@ class Consensus():
                 if self.decision == None:
                     value = message["value"]
                     self.decision = value
-                    decision_value = {"header": [], "type": "DECIDED", "value": value,  "serverSender": MY_ADDRESS, "id": decisionID}
+                    decision_value = {"header": [], "type": "DECIDED", "value": value,  "serverSender": MY_ADDRESS, "id": decisionID, "proposedId": message["proposedId"], "socket": message["socket"], "starter": message["starter"]}
                     beb.broadcast(decision_value)
-                    self.decide(self.decision)
+                    self.decide(self.decision, decision_value)
+        
 
     def choose(prop):
         
@@ -247,7 +250,7 @@ class Consensus():
             return proposals[random.randint(0,len(proposals)-1)]
         
 
-    def decide_min(self):
+    def decide_min(self, message):
 
         try:
             _ = self.received_from[self.round]
@@ -255,24 +258,24 @@ class Consensus():
 
             if self.received_from[self.round] == self.received_from[self.round-1]:
                 self.decision = Consensus.choose(self.proposals[self.round])
-                decision_value = {"header": [], "type": "DECIDED", "value": self.decision,  "serverSender": MY_ADDRESS, "id": decisionID}
+                decision_value = {"header": [], "type": "DECIDED", "value": self.decision,  "serverSender": MY_ADDRESS, "id": decisionID, "proposedId": message["proposedId"], "socket": message["socket"], "starter": message["starter"]}
                 beb.broadcast(decision_value)
-                self.decide(self.decision)
+                self.decide(self.decision, message)
             else:
                 self.round = self.round + 1
                 valueData = json.dumps(list(self.proposals[self.round - 1]))
-                proposal = {"header": [], "type": "PROPOSAL",  "serverSender": MY_ADDRESS, "round": self.round, "value": valueData, "id": decisionID}
+                proposal = {"header": [], "type": "PROPOSAL",  "serverSender": MY_ADDRESS, "round": self.round, "value": valueData, "id": decisionID, "proposedId": message["proposedId"], "socket": message["socket"], "starter": message["starter"]}
                 beb.broadcast(proposal)
 
         except IndexError:
             eprint("[EXCEPTION] INDEX found!")
 
-    def decide(self, decision_value):
+    def decide(self, decision_value, message):
         eprint(f"[DECIDED VALUE] {decision_value}")
 
         try:
             session = FuturesSession()
-            session.post(f'http://{MY_ADDRESS}/api/consensus', json={"type":"DECISION","decision":decision_value})
+            session.post(f'http://{MY_ADDRESS}/api/consensus', json={"type":"DECISION","decision":decision_value, "proposedId": message["proposedId"], "socket": message["socket"], "starter": message["starter"]})
 
         except Exception as e:
 
@@ -311,6 +314,7 @@ def index():
 
 @app.route('/api/deliver', methods=['POST'])
 def deliver_message():
+    global messageID
     # Get the JSON message from the request body
     res = request.get_json()
     serverSender = res["serverSender"]
@@ -339,7 +343,12 @@ def deliver_message():
             rb.deliver(res)
 
         if res["type"] == "STARTPROPOSAL":
-            consensus.propose_value(res["message"])
+            eprint(f"CHECK {res['id']}")
+            isValid = res["id"] in connected_clients.values()
+            if isValid:
+                consensus.propose_value(json.dumps(0), res["id"], res["socket"], res["starter"])
+            else:
+                consensus.propose_value(json.dumps(1), res["id"], res["socket"], res["starter"])
 
         if res["type"] == "PROPOSAL":
             consensus.deliver_proposal(res)
@@ -404,6 +413,7 @@ def crash_message():
 def decision_message():
     global lastDecision
     global decisionID
+    global messageID
     # Get the JSON message from the request body
     res = request.get_json()
     #eprint(f"CRASH_MESSAGE: {res}")
@@ -415,12 +425,34 @@ def decision_message():
         eprint(f"[CONSENSUS NOTIFICATION] Scelto il valore: {lastDecision}")
 
         decisionID += 1
+
+        eprint(f"decided: {res['proposedId']} with {res['decision']}")
+        if(res["starter"] and res["starter"] == MY_ADDRESS):
+            if(res['decision'] == 0):
+                        response = { "type": "INVALID", "message": "Username " + res["proposedId"] + " already in use!"}
+                        socketio.emit('message', json.dumps(response), room=res["socket"])
+            else:
+                if(res["starter"] and res["starter"] == MY_ADDRESS):
+                    connected_clients[res["socket"]] = res["proposedId"]
+                res = { "type": "RESPONSE", "message": "User " + res["proposedId"] + " connected to the chat!", "id": "all" }
+                #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
+
+                response = json.dumps(res)
+                socketio.emit('message', response)
+                res["header"] = []
+                res["serverSender"] = MY_ADDRESS
+                with idLock:
+                    res["messageID"] = messageID
+                    messageID += 1
+                rb.broadcast(res)
         consensus.reset()
 
         return "decision_ACK"
 
 @socketio.on('connect')
 def handle_connection():
+
+    
     try:
         eprint(f"[CLIENT CONNECTED]")
         
@@ -438,17 +470,27 @@ def handle_message(message):
 
     mex = json.loads(message)
     if(mex["type"] == "CONNECTION"):
-        res = { "type": "RESPONSE", "message": "User " + mex["id"] + " connected to the chat!", "id": "all" }
+        client_id = request.sid  # Get the unique ID of the connected socket
+        if(mex["id"] in connected_clients.values()):
+            res = { "type": "INVALID", "message": "Username " + mex["id"] + " already in use!"}
+            socketio.emit('message', json.dumps(res), room=client_id)
+        else:
+            res = { "type": "STARTPROPOSAL", "id": mex["id"], "socket": client_id, "starter": MY_ADDRESS}
+
+            #connected_clients[client_id] = mex["id"] 
+            #res = { "type": "RESPONSE", "message": "User " + mex["id"] + " connected to the chat!", "id": "all" }
 
     else:
         res = { "type": "RESPONSE", "message": mex["message"], "id": mex["id"] }
 
     #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
+    eprint(res)
+   
+    if(res["type"] != "INVALID" and res["type"] != "STARTPROPOSAL"):
+        response = json.dumps(res)
+        socketio.emit('message', response)
 
-    response = json.dumps(res)
-    socketio.emit('message', response)
-
-    ## send message outside
+        ## send message outside
 
     res["header"] = []
     res["serverSender"] = MY_ADDRESS
@@ -456,31 +498,32 @@ def handle_message(message):
     with idLock:
         res["messageID"] = messageID
         messageID += 1
+            
+        #eprint(f"MSG: {res}")
         
-    #eprint(f"MSG: {res}")
-      
-    # TEST CONSENSUS  
-    #consensus.propose_value(json.dumps(random.randint(0,100)))
-    consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
-    
+        # TEST CONSENSUS  
+        #consensus.propose_value(json.dumps(random.randint(0,100)))
+        #consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
     rb.broadcast(res)
         
-    #p2p.send(LINKS[0],res)
+        #p2p.send(LINKS[0],res)
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
 
-        try:
-            eprint(f"[DISCONNECTED]")
-            
-            session = FuturesSession()
-            session.post(f'http://{LOADBALANCER}/api/disconnection', json={'port': MY_ADDRESS})
+    client_id = request.sid
+    connected_clients.pop(client_id, None)
+    try:
+        eprint(f"[DISCONNECTED]")
+        
+        session = FuturesSession()
+        session.post(f'http://{LOADBALANCER}/api/disconnection', json={'port': MY_ADDRESS})
 
-        except Exception as e:
+    except Exception as e:
 
-            eprint(f"[EXCEPTION] {type(e)} found!")
-            eprint(e)
+        eprint(f"[EXCEPTION] {type(e)} found!")
+        eprint(e)
 
 
 if __name__ == '__main__':
