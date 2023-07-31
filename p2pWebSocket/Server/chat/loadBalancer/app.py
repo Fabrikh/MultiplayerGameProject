@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 import requests
 import sys
 import json
+import re
 
 app = Flask(__name__)
 
@@ -24,10 +25,12 @@ def redirect_request():
         SERVER = min(SERVERS, key=SERVERS.get)
 
         # Forward the request to the least busy server
-        target_url = f"http://{SERVER}"
+        
+        target_url = "http://localhost" + re.search(":[0-9]*",SERVER).group()
+        
         try:
-            response = requests.get(target_url + request.path + "?redirected=true")
-            return response.text, response.status_code
+            #response = requests.get(target_url + request.path + "?redirected=true")
+            return redirect(target_url + request.path + "?redirected=true", code=302)
         except Exception as e:
             SERVERS.pop(SERVER, None)
 

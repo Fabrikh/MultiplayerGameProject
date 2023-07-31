@@ -70,6 +70,13 @@
     </script>
   </head>
   <body onload="start_ws()">
+    <div id = "video_div">
+        <video width="320" height="240" autoplay>
+            <source src="{{ url_for('static', filename="test.webm") }}" type="video/webm">
+            <source src="{{ url_for('static', filename="test.mp4") }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
     <div id="chat_div">
         <textarea id="text_area" class="no-resize" cols="50" onkeypress="send_message(event)"></textarea>
         <div id="chat" class="chat"></div>    

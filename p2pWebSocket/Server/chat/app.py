@@ -1,5 +1,6 @@
 #import grequests
 import requests
+import os
 from requests_futures.sessions import FuturesSession
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO
@@ -19,6 +20,7 @@ log.setLevel(logging.ERROR)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
 socketio = SocketIO(app, cors_allowed_origins='*')
+
 
 MY_ADDRESS = ""
 linksLock = Lock()

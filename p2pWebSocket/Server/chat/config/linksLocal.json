@@ -10,5 +10,6 @@
     "3002":{
         "id": "localhost:3002",
         "links":["localhost:3000","localhost:3001"]
-    }
+    },
+    "loadbalancer": "loadbalancer:3005"
 }
