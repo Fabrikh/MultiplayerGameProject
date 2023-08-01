@@ -109,13 +109,27 @@
         function cleanInput(text){
             return text.trim();
         }
+
+        function startAnimation(fileName){
+            var myVideo = document.getElementById("diceVideo");
+            var source = myVideo.children[0]
+            myVideo.pause();
+
+            source.setAttribute('src', `./static/${fileName}.webm`);
+            source.setAttribute('type', 'video/webm');
+
+            myVideo.load();
+            myVideo.play();
+
+            console.log({src: source.getAttribute('src'),type: source.getAttribute('type')});
+        }
     </script>
   </head>
   <body onload="start_ws()">
     <div id = "video_div">
-        <video width="320" height="240" controls>
-            <source src="{{ url_for('static', filename="test.webm") }}" type="video/webm">
-            <source src="{{ url_for('static', filename="test.mp4") }}" type="video/mp4">
+        <video id ="diceVideo" width="320" height="240">
+            <source src="./static/6-6.webm" type="video/webm">
+            <!--<source src="{{ url_for('static', filename="test.mp4") }}" type="video/mp4">-->
             Your browser does not support the video tag.
         </video>
     </div>
