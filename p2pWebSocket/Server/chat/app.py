@@ -8,11 +8,12 @@ from flask_socketio import SocketIO
 import json
 import random
 
+
 import sys
 import logging
 from threading import Timer,Lock
 
-from time import sleep
+from time import sleep, time
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -31,6 +32,9 @@ LOADBALANCER = ""
 
 lastDecision = None
 decisionID = 0
+
+openRooms = {}
+closedRooms = {}
 
 connected_clients = {}
 
@@ -71,7 +75,7 @@ class BestEffortBroadcast():
         message["header"] = ["BEBroadcast"] + message["header"]
 
         with linksLock:
-            for link in LINKS.union({MY_ADDRESS}):
+            for link in LINKS:
                 self.p2p.send(link,message.copy())
 
 class PerfectFailureDetector():
@@ -302,6 +306,84 @@ pfd = PerfectFailureDetector(p2p,deltaTime=5.0)
 rb = ReliableBroadcast(beb, pfd)
 consensus = Consensus(beb, pfd)
 
+class Room():
+    def __init__ (self, roomId, startId):
+        self.roomId = roomId
+        self.players = {startId[0]}
+        self.socketsToUsers = {}
+        self.socketsToUsers[startId[0]] = startId[1]
+        self.open = True
+        self.turn = 0
+        self.timer = Timer(10.0, self.endTurn)
+        self.bets = {}
+        self.points = {}
+        self.points[startId[1]] = 100
+    
+    def close(self):
+        self.open = False
+        close_the_room(self.roomId)
+        self.startGame()
+
+    def newPlayer(self, newId):
+        
+        self.players.add(newId[0])
+        self.socketsToUsers[newId[0]] = newId[1]
+        self.points[newId[1]] = 100
+        eprint(self.players)
+
+    def checkClosure(self):
+        if len(self.players) >= 3:
+            self.close()
+
+    def getPlayers(self):
+        return list(self.socketsToUsers.items())
+    
+    def startGame(self):
+        res = {"type" : "START"}
+        for sockets in self.players:
+            socketio.emit('message', json.dumps(res), room=sockets)
+        self.timer.start()
+    
+    def endTurn(self):
+        eprint("ENDEDTURN")
+        self.turn += 1
+        #random call 
+        result = [3, 5] #example
+        total = sum(result)
+
+        for player in self.bets:
+            if total%2 == 0:
+                if self.bets[player] == "EVEN":
+                    self.points[self.socketsToUsers[player]] *= 1.5
+                elif self.bets[player] == "ODD":
+                    self.points[self.socketsToUsers[player]] *= 0.75
+            else:
+                if self.bets[player] == "ODD":
+                    self.points[self.socketsToUsers[player]] *= 1.5
+                elif self.bets[player] == "EVEN":
+                    self.points[self.socketsToUsers[player]] *= 0.75
+        
+        for sockets in self.players:
+            res = {"type" : "ENDTURN", "points": self.points}
+            socketio.emit('message', json.dumps(res), room=sockets)
+
+        self.bets = {}
+
+        if self.turn < 10:
+            self.timer = Timer(10.0, self.endTurn)
+            self.timer.start()
+        else:
+            self.end()
+        
+
+    def receiveBet(self, player, bet):
+        self.bets[player] = bet
+    
+    def end(self):
+        eprint("END GAME")
+        #To add...
+    
+
 @app.route('/')
 def index():
     #eprint(f"RICHIESTA", request.args.get('redirected'))
@@ -315,6 +397,7 @@ def index():
 @app.route('/api/deliver', methods=['POST'])
 def deliver_message():
     global messageID
+    global openRooms
     # Get the JSON message from the request body
     res = request.get_json()
     serverSender = res["serverSender"]
@@ -339,7 +422,7 @@ def deliver_message():
 
     if head == "BEBroadcast":
 
-        if res["type"] == "RESPONSE" or res["type"] == "DISCONNECTION":
+        if res["type"] == "RESPONSE" or res["type"] == "DISCONNECTION" or res["type"] == "NEWROOM" or res["type"] == "ADDTOROOM" or res["type"] == "GAMEMOVE":
             rb.deliver(res)
 
         if res["type"] == "STARTPROPOSAL":
@@ -380,9 +463,25 @@ def deliver_message():
 
     if head == "RBroadcast":
 
-        #if serverSender != MY_ADDRESS and (not res["header"] or res["header"][0] == "BEBroadcast"):
-        response = json.dumps(res)
-        socketio.emit('message', response, namespace = '/')
+        if res["type"] == "NEWROOM" or res["type"] == "ADDTOROOM":  #Either way, the set default generates a room if there isn't one with that id or just adds a value if not
+
+            if res["roomId"] not in openRooms:
+                openRooms[res["roomId"]] = Room(res["roomId"], res["startId"])
+
+            openRooms[res["roomId"]].newPlayer(res["startId"])
+            for listId in res["listId"]:
+                openRooms[res["roomId"]].newPlayer(listId)
+            newres = { "type": "ROOM", "roomId": res["roomId"], "user": res["user"]}
+            playerlist = openRooms[res["roomId"]].getPlayers()
+            for sockets in playerlist:
+                socketio.emit('message', json.dumps(newres), room=sockets[0])
+            openRooms[res["roomId"]].checkClosure()
+
+        elif res["type"] == "GAMEMOVE":
+            closedRooms[res["roomId"]].receiveBet(res["startId"], res["bet"])
+        else:                            
+            response = json.dumps(res)
+            socketio.emit('message', response, namespace = '/')
         #print("Delivered message by: ", res["id"])
 
         #eprint(f"[{MY_ADDRESS}] RB Delivery")
@@ -438,7 +537,6 @@ def decision_message():
                 #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
 
                 response = json.dumps(res)
-                socketio.emit('message', response)
                 res["header"] = []
                 res["serverSender"] = MY_ADDRESS
                 with idLock:
@@ -463,13 +561,34 @@ def handle_connection():
 
         eprint(f"[EXCEPTION] {type(e)} found!")
         eprint(e)
+
+
+
+def create_room(startId, user):
+    id = str(time()) + "&&" + MY_ADDRESS
+    USER = (startId, user)
+    openRooms[id] = Room(id, USER)
+    res = { "type" : "NEWROOM", "roomId" : id, "starter": MY_ADDRESS, "startId": USER, "listId": [USER], "user" : user}
+    return res
+
+def add_to_room(startId, user):
+    USER = (startId, user)
+    for roomId in openRooms:
+        res = { "type" : "ADDTOROOM", "roomId" : roomId, "starter": MY_ADDRESS, "startId": USER, "listId": openRooms[roomId].getPlayers(), "user" : user}
+        return res
+
+def close_the_room(roomId):
+    closedRooms[roomId] = openRooms.pop(roomId, None)
+    
+
+
 @socketio.on('message')
 def handle_message(message):
 
     global messageID
 
     mex = json.loads(message)
-    if(mex["type"] == "CONNECTION"):
+    if mex["type"] == "CONNECTION":
         client_id = request.sid  # Get the unique ID of the connected socket
         if(mex["id"] in connected_clients.values()):
             res = { "type": "INVALID", "message": "Username " + mex["id"] + " already in use!"}
@@ -480,15 +599,19 @@ def handle_message(message):
             #connected_clients[client_id] = mex["id"] 
             #res = { "type": "RESPONSE", "message": "User " + mex["id"] + " connected to the chat!", "id": "all" }
 
+    elif mex["type"] == "SEARCHGAME":
+        if not openRooms:
+            res = create_room(request.sid, mex["id"])
+            
+        else:
+            res = add_to_room(request.sid, mex["id"])
+
+    elif mex["type"] == "GAME_MOVE":
+        res = {"type": "GAMEMOVE", "roomId": mex["roomId"], "bet": mex["bet"], "startId": request.sid}
     else:
         res = { "type": "RESPONSE", "message": mex["message"], "id": mex["id"] }
 
     #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
-    eprint(res)
-   
-    if(res["type"] != "INVALID" and res["type"] != "STARTPROPOSAL"):
-        response = json.dumps(res)
-        socketio.emit('message', response)
 
         ## send message outside
 
@@ -504,6 +627,7 @@ def handle_message(message):
         # TEST CONSENSUS  
         #consensus.propose_value(json.dumps(random.randint(0,100)))
         #consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
+    eprint(res)
     rb.broadcast(res)
         
         #p2p.send(LINKS[0],res)

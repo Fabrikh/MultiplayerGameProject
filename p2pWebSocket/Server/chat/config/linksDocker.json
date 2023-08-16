@@ -1,15 +1,15 @@
 {
     "3000":{
         "id": "server0:3000",
-        "links":["server1:3001","server2:3002"]
+        "links":["server0:3000","server1:3001","server2:3002"]
     },
     "3001":{
         "id": "server1:3001",
-        "links":["server0:3000","server2:3002"]
+        "links":["server0:3000","server1:3001","server2:3002"]
     },
     "3002":{
         "id": "server2:3002",
-        "links":["server0:3000","server1:3001"]
+        "links":["server0:3000","server1:3001","server2:3002"]
     },
     "loadbalancer": "loadbalancer:3005"
 }
