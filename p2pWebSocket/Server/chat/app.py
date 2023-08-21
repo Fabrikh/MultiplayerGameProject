@@ -81,7 +81,7 @@ class BestEffortBroadcast():
 class PerfectFailureDetector():
 
     def __init__(self,p2pLink,deltaTime):
-        
+
         self.p2p = p2pLink
         self.alive = set(LINKS.copy())
         self.aliveLock = Lock()
@@ -178,7 +178,7 @@ class ReliableBroadcast():
         return True
 
 class Consensus():
-    
+
     def __init__(self, beb, pfd):
         self.beb = beb
         self.pfd = pfd
@@ -199,7 +199,7 @@ class Consensus():
 
     def propose_value(self, value, id, socket, sender):
         eprint(f"[CONSENSUS] proposal: {value}")
-        
+
         self.proposals.append(set())
 
         self.proposals[1].add(value)
@@ -238,21 +238,21 @@ class Consensus():
                     decision_value = {"header": [], "type": "DECIDED", "value": value,  "serverSender": MY_ADDRESS, "id": decisionID, "proposedId": message["proposedId"], "socket": message["socket"], "starter": message["starter"]}
                     beb.broadcast(decision_value)
                     self.decide(self.decision, decision_value)
-        
+
 
     def choose(prop):
-        
+
         # Choose a common value for everyone
-        
+
         proposals = list(map(lambda x: json.loads(x),prop))
         eprint("[CONSENSUS PROPOSALS] ##",proposals)
-        
+
         if type(proposals[0]) == int:
             return min(proposals)
-        
+
         if type(proposals[0]) == list or type(proposals[0]) == set:
             return proposals[random.randint(0,len(proposals)-1)]
-        
+
 
     def decide_min(self, message):
 
@@ -299,7 +299,7 @@ class Consensus():
         self.decision = None
         self.round = 1
 
-        
+
 p2p = P2PLink()
 beb = BestEffortBroadcast(p2p)
 pfd = PerfectFailureDetector(p2p,deltaTime=5.0)
@@ -318,14 +318,14 @@ class Room():
         self.bets = {}
         self.points = {}
         self.points[startId[1]] = 100
-    
+
     def close(self):
         self.open = False
         close_the_room(self.roomId)
         self.startGame()
 
     def newPlayer(self, newId):
-        
+
         self.players.add(newId[0])
         self.socketsToUsers[newId[0]] = newId[1]
         self.points[newId[1]] = 100
@@ -337,34 +337,58 @@ class Room():
 
     def getPlayers(self):
         return list(self.socketsToUsers.items())
-    
+
     def startGame(self):
         res = {"type" : "START"}
         for sockets in self.players:
             socketio.emit('message', json.dumps(res), room=sockets)
         self.timer.start()
-    
+
     def endTurn(self):
         eprint("ENDEDTURN")
         self.turn += 1
-        #random call 
-        result = [3, 5] #example
+        #random call
+        dice1 = random.randint(1, 6)
+        dice2 = random.randint(1, 6)
+        result = [dice1, dice2] #example
         total = sum(result)
 
+        eprint(total)
+
         for player in self.bets:
-            if total%2 == 0:
-                if self.bets[player] == "EVEN":
-                    self.points[self.socketsToUsers[player]] *= 1.5
-                elif self.bets[player] == "ODD":
-                    self.points[self.socketsToUsers[player]] *= 0.75
+            if self.bets[player] == "EVEN" or self.bets[player] == "ODD":
+                if total%2 == 0:
+                    if self.bets[player] == "EVEN":
+                        self.points[self.socketsToUsers[player]] *= 2
+                else:
+                    if self.bets[player] == "ODD":
+                        self.points[self.socketsToUsers[player]] *= 2
             else:
-                if self.bets[player] == "ODD":
-                    self.points[self.socketsToUsers[player]] *= 1.5
-                elif self.bets[player] == "EVEN":
-                    self.points[self.socketsToUsers[player]] *= 0.75
-        
+                if total==2 and self.bets[player] == "TWO":
+                    self.points[self.socketsToUsers[player]] *= 18
+                elif total==3 and self.bets[player] == "THREE":
+                    self.points[self.socketsToUsers[player]] *= 9
+                elif total==4 and self.bets[player] == "FOUR":
+                    self.points[self.socketsToUsers[player]] *= 6
+                elif total==5 and self.bets[player] == "FIVE":
+                    self.points[self.socketsToUsers[player]] *= 5
+                elif total==6 and self.bets[player] == "SIX":
+                    self.points[self.socketsToUsers[player]] *= 4
+                elif total==7 and self.bets[player] == "SEVEN":
+                    self.points[self.socketsToUsers[player]] *= 3
+                elif total==8 and self.bets[player] == "EIGHT":
+                    self.points[self.socketsToUsers[player]] *= 4
+                elif total==9 and self.bets[player] == "NINE":
+                    self.points[self.socketsToUsers[player]] *= 5
+                elif total==10 and self.bets[player] == "TEN":
+                    self.points[self.socketsToUsers[player]] *= 6
+                elif total==11 and self.bets[player] == "ELEVEN":
+                    self.points[self.socketsToUsers[player]] *= 9
+                elif total==12 and self.bets[player] == "TWELVE":
+                    self.points[self.socketsToUsers[player]] *= 18
+
         for sockets in self.players:
-            res = {"type" : "ENDTURN", "points": self.points}
+            res = {"type" : "ENDTURN", "points": self.points, "total": total}
             socketio.emit('message', json.dumps(res), room=sockets)
 
         self.bets = {}
@@ -374,15 +398,15 @@ class Room():
             self.timer.start()
         else:
             self.end()
-        
+
 
     def receiveBet(self, player, bet):
         self.bets[player] = bet
-    
+
     def end(self):
         eprint("END GAME")
         #To add...
-    
+
 
 @app.route('/')
 def index():
@@ -479,7 +503,7 @@ def deliver_message():
 
         elif res["type"] == "GAMEMOVE":
             closedRooms[res["roomId"]].receiveBet(res["startId"], res["bet"])
-        else:                            
+        else:
             response = json.dumps(res)
             socketio.emit('message', response, namespace = '/')
         #print("Delivered message by: ", res["id"])
@@ -550,10 +574,10 @@ def decision_message():
 @socketio.on('connect')
 def handle_connection():
 
-    
+
     try:
         eprint(f"[CLIENT CONNECTED]")
-        
+
         session = FuturesSession()
         session.post(f'http://{LOADBALANCER}/api/connection', json={'port': MY_ADDRESS})
 
@@ -579,7 +603,7 @@ def add_to_room(startId, user):
 
 def close_the_room(roomId):
     closedRooms[roomId] = openRooms.pop(roomId, None)
-    
+
 
 
 @socketio.on('message')
@@ -596,13 +620,13 @@ def handle_message(message):
         else:
             res = { "type": "STARTPROPOSAL", "id": mex["id"], "socket": client_id, "starter": MY_ADDRESS}
 
-            #connected_clients[client_id] = mex["id"] 
+            #connected_clients[client_id] = mex["id"]
             #res = { "type": "RESPONSE", "message": "User " + mex["id"] + " connected to the chat!", "id": "all" }
 
     elif mex["type"] == "SEARCHGAME":
         if not openRooms:
             res = create_room(request.sid, mex["id"])
-            
+
         else:
             res = add_to_room(request.sid, mex["id"])
 
@@ -621,15 +645,15 @@ def handle_message(message):
     with idLock:
         res["messageID"] = messageID
         messageID += 1
-            
+
         #eprint(f"MSG: {res}")
-        
-        # TEST CONSENSUS  
+
+        # TEST CONSENSUS
         #consensus.propose_value(json.dumps(random.randint(0,100)))
         #consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
     eprint(res)
     rb.broadcast(res)
-        
+
         #p2p.send(LINKS[0],res)
 
 
@@ -653,9 +677,9 @@ def handle_disconnect():
     with idLock:
         res["messageID"] = messageID
         messageID += 1
-            
+
         #eprint(f"MSG: {res}")
-        
+
     rb.broadcast(res)
 
 

@@ -32,13 +32,13 @@
                 username = prompt("Please enter your username (only letters and numbers allowed):");
                 if (username !== null && username.trim() !== '') {
                     isValid = isValidUsername(username);
-                    if (!isValid) 
+                    if (!isValid)
                         alert("Invalid username. Please use only letters and numbers.");
                 } else {
                     alert("You must enter a valid username to continue.");
                 }
             }
-            
+
             myId = username;
 
             socket = io.connect('http://localhost:'+{{SOCKET_PORT}}+'/');
@@ -46,7 +46,7 @@
             // WebSocket connection event
             socket.on('connect', function() {
                 console.log('Connected to the WebSocket server');
-                
+
                 var connection = { type: "CONNECTION", message: "Hi! I'm " + myId, id: myId};
                 var conn = JSON.stringify(connection);
                 socket.emit('message', conn);
@@ -63,13 +63,13 @@
                         username = prompt("Please enter your username (only letters and numbers allowed):");
                         if (username !== null && username.trim() !== '') {
                             isValid = isValidUsername(username);
-                            if (!isValid) 
+                            if (!isValid)
                                 alert("Invalid username. Please use only letters and numbers.");
                         } else {
                             alert("You must enter a valid username to continue.");
                         }
                     }
-                    
+
                     myId = username;
 
                     var connection = { type: "CONNECTION", message: "Hi! I'm " + myId, id: myId};
@@ -84,6 +84,7 @@
                     } else if(mex.type == "START"){
                         document.getElementById("chat").innerHTML += `<div> STARTING THE GAME</div>`;
                     } else if(mex.type == "ENDTURN") {
+                        document.getElementById("chat").innerHTML += `<div> THE DRAWN NUMBER IS: ${mex.total}! </div>`;
                         for (let key in mex.points) {
                             if (mex.points.hasOwnProperty(key)) {
                                 let value = mex.points[key];
@@ -97,18 +98,18 @@
                         document.getElementById("chat").innerHTML += `<div class="connect-message">${mex.message}</div>`;
                         }else{
                             document.getElementById("chat").innerHTML += `<div>${mex.id}: ${mex.message}</div>`;
-                        }        
-                    }            
+                        }
+                    }
                 }
-   
+
             });
 
             socket.on('disconnect', function() {
-                window.location.href = "http://localhost:3005";    
+                window.location.href = "http://localhost:3005";
             });
 
         }
-        
+
         function send_message(event) {
 
             let textarea = event.target;
@@ -117,11 +118,11 @@
 
                 event.preventDefault();
                 let text = cleanInput(textarea.value);
-                
+
                 if(text != ""){
                     socket.emit('message', JSON.stringify({ header: [],type: "MESSAGE", message: text, id: myId }));
                 }
-                
+
                 textarea.value = "";
             }
         }
@@ -166,10 +167,22 @@
     </div>
     <div id="chat_div">
         <textarea id="text_area" class="no-resize" cols="50" onkeypress="send_message(event)"></textarea>
-        <div id="chat" class="chat"></div>    
+        <div id="chat" class="chat"></div>
     </div>
     <button id="search" onclick="searchRoom()">Search a game room!</button>
     <button id="even" onclick="bet('EVEN')">Even</button>
     <button id="odd" onclick="bet('ODD')">Odd</button>
+
+    <button id="two" onclick="bet('TWO')">2</button>
+    <button id="three" onclick="bet('THREE')">3</button>
+    <button id="four" onclick="bet('FOUR')">4</button>
+    <button id="five" onclick="bet('FIVE')">5</button>
+    <button id="six" onclick="bet('SIX')">6</button>
+    <button id="seven" onclick="bet('SEVEN')">7</button>
+    <button id="eight" onclick="bet('EIGHT')">8</button>
+    <button id="nine" onclick="bet('NINE')">9</button>
+    <button id="ten" onclick="bet('TEN')">10</button>
+    <button id="eleven" onclick="bet('ELEVEN')">11</button>
+    <button id="twelve" onclick="bet('TWELVE')">12</button>
   </body>
 </html>
