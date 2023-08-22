@@ -9,7 +9,7 @@ CREATE TABLE users (
     id INTEGER PRIMARY KEY,
     username TEXT NOT NULL,
     password TEXT NOT NULL,
-    avatar BLOB
+    avatar TEXT NOT NULL
 );
 """
 

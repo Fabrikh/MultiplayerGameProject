@@ -4,6 +4,7 @@ import sys
 import json
 import re
 import sqlite3
+import base64
 
 app = Flask(__name__)
 
@@ -23,16 +24,16 @@ def default():
 
 @app.route("/users", methods=["POST"])
 def add_user():
+    print(request.form)
     try:
-        username = request.form["username"]
-        password = request.form["password"]
-        confirm_password = request.form["confirm_password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
+        avatar_base64_image = request.form.get("base64Image")
+        confirm_password = password
 
         # Check if passwords match
         if password != confirm_password:
             raise ValueError("Passwords do not match")
-
-        avatar_file = request.files["avatar"]
 
         conn = sqlite3.connect("userDB.db")
         cursor = conn.cursor()
@@ -43,7 +44,7 @@ def add_user():
         VALUES (?, ?, ?)
         """
 
-        cursor.execute(insert_query, (username, password, avatar_file))
+        cursor.execute(insert_query, (username, password, avatar_base64_image))
         conn.commit()
         conn.close()
 

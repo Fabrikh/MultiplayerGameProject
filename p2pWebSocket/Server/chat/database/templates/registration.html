@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="registration.js"></script>
+
     <title>Registration Form</title>
   </head>
   <body>
     <h1>Registration Form</h1>
     <form
+      id="registrationForm"
       action="/users"
       method="post"
       enctype="multipart/form-data"
-      onsubmit="return validateForm()"
     >
       <label for="username">Username:</label>
       <input type="text" id="username" name="username" required /><br /><br />
@@ -48,5 +48,6 @@
 
       <input type="submit" value="Register" />
     </form>
+    <script src="./registration.js"></script>
   </body>
 </html>
