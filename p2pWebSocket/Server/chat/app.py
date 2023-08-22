@@ -316,6 +316,7 @@ class Room():
         self.turn = 0
         self.timer = Timer(10.0, self.endTurn)
         self.bets = {}
+        self.placedBet = {}
         self.points = {}
         self.points[startId[1]] = 100
 
@@ -359,49 +360,87 @@ class Room():
             if self.bets[player] == "EVEN" or self.bets[player] == "ODD":
                 if total%2 == 0:
                     if self.bets[player] == "EVEN":
-                        self.points[self.socketsToUsers[player]] *= 2
+                        self.points[self.socketsToUsers[player]] += 2 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
                 else:
                     if self.bets[player] == "ODD":
-                        self.points[self.socketsToUsers[player]] *= 2
+                        self.points[self.socketsToUsers[player]] += 2 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
             else:
-                if total==2 and self.bets[player] == "TWO":
-                    self.points[self.socketsToUsers[player]] *= 18
-                elif total==3 and self.bets[player] == "THREE":
-                    self.points[self.socketsToUsers[player]] *= 9
-                elif total==4 and self.bets[player] == "FOUR":
-                    self.points[self.socketsToUsers[player]] *= 6
-                elif total==5 and self.bets[player] == "FIVE":
-                    self.points[self.socketsToUsers[player]] *= 5
-                elif total==6 and self.bets[player] == "SIX":
-                    self.points[self.socketsToUsers[player]] *= 4
-                elif total==7 and self.bets[player] == "SEVEN":
-                    self.points[self.socketsToUsers[player]] *= 3
-                elif total==8 and self.bets[player] == "EIGHT":
-                    self.points[self.socketsToUsers[player]] *= 4
-                elif total==9 and self.bets[player] == "NINE":
-                    self.points[self.socketsToUsers[player]] *= 5
-                elif total==10 and self.bets[player] == "TEN":
-                    self.points[self.socketsToUsers[player]] *= 6
-                elif total==11 and self.bets[player] == "ELEVEN":
-                    self.points[self.socketsToUsers[player]] *= 9
-                elif total==12 and self.bets[player] == "TWELVE":
-                    self.points[self.socketsToUsers[player]] *= 18
-
+                if total==2:
+                    if self.bets[player] == "TWO":
+                        self.points[self.socketsToUsers[player]] += 18 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==3:
+                    if self.bets[player] == "THREE":
+                        self.points[self.socketsToUsers[player]] += 9 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==4:
+                    if self.bets[player] == "FOUR":
+                        self.points[self.socketsToUsers[player]] += 6 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==5:
+                    if self.bets[player] == "FIVE":
+                        self.points[self.socketsToUsers[player]] += 5 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==6:
+                    if self.bets[player] == "SIX":
+                        self.points[self.socketsToUsers[player]] += 4 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==7:
+                    if self.bets[player] == "SEVEN":
+                        self.points[self.socketsToUsers[player]] += 3 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==8:
+                    if self.bets[player] == "EIGHT":
+                        self.points[self.socketsToUsers[player]] += 4 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==9:
+                    if self.bets[player] == "NINE":
+                        self.points[self.socketsToUsers[player]] += 5 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==10:
+                    if self.bets[player] == "TEN":
+                        self.points[self.socketsToUsers[player]] += 6 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==11:
+                    if self.bets[player] == "ELEVEN":
+                        self.points[self.socketsToUsers[player]] += 9 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                elif total==12:
+                    if self.bets[player] == "TWELVE":
+                        self.points[self.socketsToUsers[player]] += 18 * int(self.placedBet[player])
+                    else:
+                        self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                        
         for sockets in self.players:
             res = {"type" : "ENDTURN", "points": self.points, "total": total}
             socketio.emit('message', json.dumps(res), room=sockets)
 
         self.bets = {}
 
-        if self.turn < 10:
-            self.timer = Timer(10.0, self.endTurn)
+        if self.turn < 20:
+            self.timer = Timer(20.0, self.endTurn)
             self.timer.start()
         else:
             self.end()
 
 
-    def receiveBet(self, player, bet):
+    def receiveBet(self, player, bet, placedBet):
         self.bets[player] = bet
+        self.placedBet[player] = placedBet
 
     def end(self):
         eprint("END GAME")
@@ -502,7 +541,7 @@ def deliver_message():
             openRooms[res["roomId"]].checkClosure()
 
         elif res["type"] == "GAMEMOVE":
-            closedRooms[res["roomId"]].receiveBet(res["startId"], res["bet"])
+            closedRooms[res["roomId"]].receiveBet(res["startId"], res["bet"], res["placedBet"])
         else:
             response = json.dumps(res)
             socketio.emit('message', response, namespace = '/')
@@ -631,7 +670,7 @@ def handle_message(message):
             res = add_to_room(request.sid, mex["id"])
 
     elif mex["type"] == "GAME_MOVE":
-        res = {"type": "GAMEMOVE", "roomId": mex["roomId"], "bet": mex["bet"], "startId": request.sid}
+        res = {"type": "GAMEMOVE", "roomId": mex["roomId"], "bet": mex["bet"], "placedBet": mex["placedBet"], "startId": request.sid}
     else:
         res = { "type": "RESPONSE", "message": mex["message"], "id": mex["id"] }
 

@@ -18,6 +18,9 @@
         var myId = "";
         var roomId = "";
 
+        var placedBet = "";
+        var betValue = "";
+
         let points = {}
 
         function isValidUsername(username) {
@@ -152,9 +155,36 @@
             socket.emit('message', JSON.stringify({ header: [],type: "SEARCHGAME", id: myId }));
         }
 
-        function bet(value) {
-            socket.emit('message', JSON.stringify({ header: [],type: "GAME_MOVE", "roomId": roomId, "bet": value }));
+        function bet() {
+            socket.emit('message', JSON.stringify({ header: [],type: "GAME_MOVE", "roomId": roomId, "bet": betValue, "placedBet": placedBet }));
+            document.getElementById("text_area2").value = '';
+            document.getElementById("recap").textContent = 'YOU BET '+placedBet+' OVER '+betValue+'!';
         }
+
+        function setValue(value) {
+            betValue = value;
+        }
+
+        function setPlacedBet(event) {
+
+            let textarea = event.target;
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+                let text = cleanInput(textarea.value);
+
+                if(text != ""){
+                    placedBet = text;
+                    textarea.value = "PLACED "+text+"!";
+                }else{
+                    textarea.value = "";
+                }
+
+
+            }
+        }
+
     </script>
   </head>
   <body onload="start_ws()">
@@ -170,19 +200,29 @@
         <div id="chat" class="chat"></div>
     </div>
     <button id="search" onclick="searchRoom()">Search a game room!</button>
-    <button id="even" onclick="bet('EVEN')">Even</button>
-    <button id="odd" onclick="bet('ODD')">Odd</button>
 
-    <button id="two" onclick="bet('TWO')">2</button>
-    <button id="three" onclick="bet('THREE')">3</button>
-    <button id="four" onclick="bet('FOUR')">4</button>
-    <button id="five" onclick="bet('FIVE')">5</button>
-    <button id="six" onclick="bet('SIX')">6</button>
-    <button id="seven" onclick="bet('SEVEN')">7</button>
-    <button id="eight" onclick="bet('EIGHT')">8</button>
-    <button id="nine" onclick="bet('NINE')">9</button>
-    <button id="ten" onclick="bet('TEN')">10</button>
-    <button id="eleven" onclick="bet('ELEVEN')">11</button>
-    <button id="twelve" onclick="bet('TWELVE')">12</button>
+    <br>
+    <textarea id="text_area2" class="no-resize" cols="50" onkeypress="setPlacedBet(event)"></textarea>
+
+    <br>
+    <button id="even" onclick="setValue('EVEN')">Even</button>
+    <button id="odd" onclick="setValue('ODD')">Odd</button>
+
+    <br>
+    <button id="two" onclick="setValue('TWO')">2</button>
+    <button id="three" onclick="setValue('THREE')">3</button>
+    <button id="four" onclick="setValue('FOUR')">4</button>
+    <button id="five" onclick="setValue('FIVE')">5</button>
+    <button id="six" onclick="setValue('SIX')">6</button>
+    <button id="seven" onclick="setValue('SEVEN')">7</button>
+    <button id="eight" onclick="setValue('EIGHT')">8</button>
+    <button id="nine" onclick="setValue('NINE')">9</button>
+    <button id="ten" onclick="setValue('TEN')">10</button>
+    <button id="eleven" onclick="setValue('ELEVEN')">11</button>
+    <button id="twelve" onclick="setValue('TWELVE')">12</button>
+
+    <br>
+    <button id="bet" onclick="bet()">BET!</button>
+    <h2 id="recap"></h2>
   </body>
 </html>
