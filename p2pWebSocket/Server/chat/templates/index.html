@@ -94,6 +94,7 @@
                                 document.getElementById("chat").innerHTML += `<div> Player: ${key} has now: ${value} points!</div>`;
                             }
                         }
+                        document.getElementById("mypoints").textContent = 'TOTAL POINTS: '+mex.points[myId];
                         //document.getElementById("chat").innerHTML += `<div> ${mex.points}</div>`;
                     }
                     else{
@@ -200,6 +201,9 @@
         <div id="chat" class="chat"></div>
     </div>
     <button id="search" onclick="searchRoom()">Search a game room!</button>
+
+    <br>
+    <h2 id="mypoints">TOTAL POINTS: 100</h2>
 
     <br>
     <textarea id="text_area2" class="no-resize" cols="50" onkeypress="setPlacedBet(event)"></textarea>

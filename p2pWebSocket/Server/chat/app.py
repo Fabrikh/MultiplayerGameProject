@@ -424,7 +424,7 @@ class Room():
                         self.points[self.socketsToUsers[player]] += 18 * int(self.placedBet[player])
                     else:
                         self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
-                        
+
         for sockets in self.players:
             res = {"type" : "ENDTURN", "points": self.points, "total": total}
             socketio.emit('message', json.dumps(res), room=sockets)
