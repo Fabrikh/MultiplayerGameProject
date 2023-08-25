@@ -73,6 +73,7 @@ def login():
 
         if user is not None:
             # Store user data in the session
+            session["username"] = provided_username
             return redirect(url_for("user_dashboard", username=provided_username))
         else:
             response = {
@@ -98,7 +99,7 @@ def login_page():
 @app.route("/", methods=["GET"])
 def default():
     try:
-        return render_template("login.html")
+        return redirect(url_for("login"))
     except Exception as e:
         response = {"error": str(e)}
         return jsonify(response), 400  # HTTP 400 Bad Request status code
