@@ -226,7 +226,7 @@
             var source = myVideo.children[0]
             myVideo.pause();
 
-            source.setAttribute('src', `./static/diceAniamtions/${fileName}.webm`);
+            source.setAttribute('src', `./static/assets/diceAniamtions/${fileName}.webm`);
             source.setAttribute('type', 'video/webm');
 
             myVideo.load();
@@ -280,8 +280,8 @@
           <div class="col-md-6">
             <div class="embed-responsive embed-responsive-16by9 my-5">
               <div class="row" id="video_div">
-                <video class="embed-responsive-item" id="diceVideo" width="320" height="240" autoplay muted>
-                  <source src="./static/diceAnimations/6-6.webm" type="video/webm">
+                <video class="embed-responsive-item" id="diceVideo" width="320" height="240" muted>
+                  <source src="./static/assets/diceAnimations/6-6.webm" type="video/webm">
                   <!--<source src="{{ url_for('static', filename="test.mp4") }}" type="video/mp4">-->
                   Your browser does not support the video tag.
                 </video>
