@@ -29,6 +29,7 @@ LINKS = {}
 messageID = 0
 idLock = Lock()
 LOADBALANCER = ""
+RNG = ""
 
 lastDecision = None
 decisionID = 0
@@ -306,8 +307,17 @@ pfd = PerfectFailureDetector(p2p,deltaTime=5.0)
 rb = ReliableBroadcast(beb, pfd)
 consensus = Consensus(beb, pfd)
 
+class Rng():
+    def __init__ (self, rb):
+        self.rb = rb
+
+    def random_dice():
+        dice1 = requests.get(f'http://{RNG}/api/random')["random_number"]
+        dice2 = requests.get(f'http://{RNG}/api/random')["random_number"]
+        return dice1+dice2
+
 class Room():
-    def __init__ (self, roomId, startId):
+    def __init__ (self, roomId, startId, rng=Rng()):
         self.roomId = roomId
         self.players = {startId[0]}
         self.socketsToUsers = {}
@@ -348,11 +358,17 @@ class Room():
     def endTurn(self):
         eprint("ENDEDTURN")
         self.turn += 1
+
+        ### NAIVE ###
         #random call
-        dice1 = random.randint(1, 6)
+        """ dice1 = random.randint(1, 6)
         dice2 = random.randint(1, 6)
         result = [dice1, dice2] #example
-        total = sum(result)
+        total = sum(result) """
+        #############
+
+        ### RNG ###
+        total = rng.random_dice()
 
         eprint(total)
 
