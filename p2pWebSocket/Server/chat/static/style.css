@@ -1,6 +1,9 @@
 body{
-    background-color:#303230;
+    /*background-color:#303230;*/
+    background-image: url("./assets/bg4.png");
+    background-size: 200px 200px;
 }
+
 
 .connect-message {
     font-weight: bold;
@@ -58,6 +61,12 @@ body{
 
 .card-footer .btn:hover{
     background-color:#076435;
+}
+
+.embed-responsive{
+    border-color:rgb(45, 45, 45);
+    border-width: 10;
+    border-style: solid;
 }
 
 #diceVideo{
