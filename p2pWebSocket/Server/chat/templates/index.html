@@ -120,6 +120,9 @@
         var placedBet = "";
         var betValue = "";
 
+        var placedBet2 = "";
+        var betValue2 = "";
+
         let points = {}
 
         function isValidUsername(username) {
@@ -257,6 +260,7 @@
                         //document.getElementById("chat").innerHTML += `<div> THE DRAWN NUMBER IS: ${mex.total}! </div>`;
                         writeOnChat(`THE DRAWN NUMBER IS: ${mex.total}!`,"System")
                         document.getElementById("myRange").setAttribute("max", mex.points[myId]);
+                        document.getElementById("myRange2").setAttribute("max", mex.points[myId]);
                         for (let key in mex.points) {
                             if (mex.points.hasOwnProperty(key)) {
                                 let value = mex.points[key];
@@ -352,13 +356,20 @@
 
         function bet() {
             var slider = document.getElementById("myRange");
+            var slider2 = document.getElementById("myRange2");
             placedBet = slider.value;
-            socket.emit('message', JSON.stringify({ header: [],type: "GAME_MOVE", "roomId": roomId, "bet": betValue, "placedBet": placedBet }));
+            placedBet2 = slider2.value;
+            socket.emit('message', JSON.stringify({ header: [],type: "GAME_MOVE", "roomId": roomId, "bet": betValue, "placedBet": placedBet, "bet2": betValue2, "placedBet2": placedBet2 }));
             document.getElementById("recap").textContent = 'YOU BET '+placedBet+' OVER '+betValue+'!';
+            document.getElementById("recap2").textContent = 'YOU BET '+placedBet2+' OVER '+betValue2+'!';
         }
 
         function setValue(value) {
             betValue = value;
+        }
+
+        function setValue2(value) {
+            betValue2 = value;
         }
 
 
@@ -409,17 +420,17 @@
 
             <div class="float-child">
               <div class="cellcontainer">
-                 <div class="cell cell-1" onclick="setValue('TWO')">"2"<br>x18</div>
-                 <div class="cell cell-2" onclick="setValue('THREE')">"3"<br>x9</div>
-                 <div class="cell cell-3" onclick="setValue('FOUR')">"4"<br>x6</div>
-                 <div class="cell cell-4" onclick="setValue('FIVE')">"5"<br>x5</div>
-                 <div class="cell cell-5" onclick="setValue('SIX')">"6"<br>x4</div>
-                 <div class="cell cell-6" onclick="setValue('SEVEN')">"7"<br>x3</div>
-                 <div class="cell cell-7" onclick="setValue('EIGHT')">"8"<br>x4</div>
-                 <div class="cell cell-8" onclick="setValue('NINE')">"9"<br>x5</div>
-                 <div class="cell cell-9" onclick="setValue('TEN')">"10"<br>x6</div>
-                 <div class="cell cell-10" onclick="setValue('ELEVEN')">"11"<br>x9</div>
-                 <div class="cell cell-11" onclick="setValue('TWELVE')">"12"<br>x18</div>
+                 <div class="cell cell-1" onclick="setValue2('TWO')">"2"<br>x18</div>
+                 <div class="cell cell-2" onclick="setValue2('THREE')">"3"<br>x9</div>
+                 <div class="cell cell-3" onclick="setValue2('FOUR')">"4"<br>x6</div>
+                 <div class="cell cell-4" onclick="setValue2('FIVE')">"5"<br>x5</div>
+                 <div class="cell cell-5" onclick="setValue2('SIX')">"6"<br>x4</div>
+                 <div class="cell cell-6" onclick="setValue2('SEVEN')">"7"<br>x3</div>
+                 <div class="cell cell-7" onclick="setValue2('EIGHT')">"8"<br>x4</div>
+                 <div class="cell cell-8" onclick="setValue2('NINE')">"9"<br>x5</div>
+                 <div class="cell cell-9" onclick="setValue2('TEN')">"10"<br>x6</div>
+                 <div class="cell cell-10" onclick="setValue2('ELEVEN')">"11"<br>x9</div>
+                 <div class="cell cell-11" onclick="setValue2('TWELVE')">"12"<br>x18</div>
                </div>
             </div>
 
@@ -447,7 +458,8 @@
             <div id="player2ScoreDiv" style="color:white">20</div>
             <div id="player3ScoreDiv" style="color:white">30</div>
             <h2 id="recap" style="color:white"></h2>
-            <h2 id="winner"></h2>
+            <h2 id="recap2" style="color:white"></h2>
+            <h2 id="winner" style="color:white"></h2>
           </div>
           <div class="col-md-6 px-5 my-auto">
 
