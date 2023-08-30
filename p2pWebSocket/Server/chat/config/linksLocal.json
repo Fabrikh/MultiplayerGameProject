@@ -12,5 +12,6 @@
     "links": ["localhost:3000", "localhost:3001"]
   },
   "loadbalancer": "loadbalancer:3005",
-  "database": "database:4000"
+  "database": "database:4000",
+  "rng":"rng:3999"
 }
