@@ -35,6 +35,14 @@ services:
       - "3005:3005"
     networks:
       - backend
+  rng:
+    build:
+      context: ./rng/
+      dockerfile: ./Dockerfile
+    ports:
+      - "3999:3999"
+    networks:
+      - backend
   database:
     build:
       context: ./database/
