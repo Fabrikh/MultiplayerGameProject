@@ -50,6 +50,7 @@ with open(sys.argv[2]) as linkConfigFile:
     MY_ADDRESS = data[sys.argv[1]]["id"]
     LINKS = set(data[sys.argv[1]]["links"])
     LOADBALANCER =data["loadbalancer"]
+    RNG = data["rng"]
 
 class P2PLink():
 
@@ -308,16 +309,17 @@ rb = ReliableBroadcast(beb, pfd)
 consensus = Consensus(beb, pfd)
 
 class Rng():
-    def __init__ (self, rb):
-        self.rb = rb
-
-    def random_dice():
-        dice1 = requests.get(f'http://{RNG}/api/random')["random_number"]
-        dice2 = requests.get(f'http://{RNG}/api/random')["random_number"]
+    
+    def random_dice(self):
+        dice1 = requests.get(f'http://{RNG}/api/random').json()
+        print(dice1)
+        dice1 = dice1["random_number"]
+        dice2 = requests.get(f'http://{RNG}/api/random').json()["random_number"]
+        print(dice2)
         return dice1+dice2
 
 class Room():
-    def __init__ (self, roomId, startId, rng=Rng(rb)):
+    def __init__ (self, roomId, startId, rng=Rng()):
         self.roomId = roomId
         self.players = {startId[0]}
         self.socketsToUsers = {}
@@ -369,7 +371,7 @@ class Room():
         #############
 
         ### RNG ###
-        total = rng.random_dice()
+        total = self.rng.random_dice()
 
         eprint(total)
 
