@@ -324,7 +324,7 @@ class Room():
         self.socketsToUsers[startId[0]] = startId[1]
         self.open = True
         self.turn = 0
-        self.timer = Timer(10.0, self.endTurn)
+        self.timer = Timer(20.0, self.endTurn)
         self.bets = {}
         self.placedBet = {}
         self.points = {}
@@ -362,14 +362,14 @@ class Room():
 
         ### NAIVE ###
         #random call
-        """ dice1 = random.randint(1, 6)
+        dice1 = random.randint(1, 6)
         dice2 = random.randint(1, 6)
         result = [dice1, dice2] #example
-        total = sum(result) """
+        total = sum(result)
         #############
 
         ### RNG ###
-        total = rng.random_dice()
+        """total = rng.random_dice()"""
 
         eprint(total)
 
@@ -448,7 +448,7 @@ class Room():
 
         self.bets = {}
 
-        if self.turn < 20:
+        if self.turn < 5:
             self.timer = Timer(20.0, self.endTurn)
             self.timer.start()
         else:
@@ -461,7 +461,9 @@ class Room():
 
     def end(self):
         eprint("END GAME")
-        #To add...
+        for sockets in self.players:
+            res = {"type" : "ENDGAME", "points": self.points}
+            socketio.emit('message', json.dumps(res), room=sockets)
 
 
 @app.route('/')
