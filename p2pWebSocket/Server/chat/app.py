@@ -317,7 +317,7 @@ class Rng():
         return dice1+dice2
 
 class Room():
-    def __init__ (self, roomId, startId, rng=Rng()):
+    def __init__ (self, roomId, startId, rng=Rng(rb)):
         self.roomId = roomId
         self.players = {startId[0]}
         self.socketsToUsers = {}
@@ -329,6 +329,7 @@ class Room():
         self.placedBet = {}
         self.points = {}
         self.points[startId[1]] = 100
+        self.rng = rng
 
     def close(self):
         self.open = False
