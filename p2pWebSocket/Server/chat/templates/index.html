@@ -15,15 +15,13 @@
             margin-top: 20px;
         }
         .cellcontainer {
-          margin-top: 20px;
-          width: 50%;
+          margin-top: 30px;
           display: grid;
           grid-template-columns: 1fr 1fr 1fr;
           grid-template-rows: 1fr 1fr 1fr;
           grid-gap: 1px 1px;
         }
         .evenodd {
-          width: 50%;
           display: grid;
           grid-template-columns: 1fr 1fr;
           grid-template-rows: 1fr;
@@ -59,17 +57,21 @@
           background: green;
         }
         .rangediv {
+          margin-left: 20px;
         }
         .rangevalue {
           position: relative;
           display: flex;
           text-align: center;
           font-size: 2em;
-          color: #999;
+          color: white;
           font-weight: 400;
         }
+        #rangeValue2 {
+          margin-top: 150px;
+        }
         .range {
-          width: 50%;
+          width: 100%;
           height: 15px;
           -webkit-appearance: none;
           background: #111;
@@ -83,10 +85,30 @@
           width: 10px;
           height: 10px;
           border-radius: 50%;
-          background: red;
+          background: #4CAF50;
           cursor: pointer;
-          border: 4px solid #333;
-          box-shadow: -407px 0 0 400px red;
+          border: 4px solid #4CAF50;
+          box-shadow: -407px 0 0 400px #4CAF50;
+        }
+        .float-container {
+
+        }
+        .float-child {
+            width: 50%;
+            float: left;
+        }
+        #bet, #search {
+          width: 100%;
+          margin-top: 40px;
+          margin-bottom: 40px;
+          background-color: #4CAF50;
+          border: none;
+          color: white;
+          padding: 15px 32px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 16px;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -357,47 +379,67 @@
               </div>
             </div>
 
-            <button id="search" onclick="searchRoom()">Search a game room!</button>
 
           <br>
-          <div class="evenodd">
-            <div class="cell cell-even" onclick="setValue('EVEN')">Even<br>x2</div>
-            <div class="cell cell-odd" onclick="setValue('ODD')">Odd<br>x2</div>
-          </div>
-          <div class="rangediv">
-             <span class="rangevalue" id="rangeValue">0</span>
-             <Input class="range" type="range" name "" value="0" min="0" max="100" onChange="rangeSlide(this.value)" onmousemove="rangeSlide(this.value)" id="myRange"></Input>
-           </div>
-           <script type="text/javascript">
-              function rangeSlide(value) {
-              document.getElementById('rangeValue').innerHTML = value;
-            }
-          </script>
+          <div class="float-container">
 
-
-
-           <div class="cellcontainer">
-              <div class="cell cell-1" onclick="setValue('TWO')">"2"<br>x18</div>
-              <div class="cell cell-2" onclick="setValue('THREE')">"3"<br>x9</div>
-              <div class="cell cell-3" onclick="setValue('FOUR')">"4"<br>x6</div>
-              <div class="cell cell-4" onclick="setValue('FIVE')">"5"<br>x5</div>
-              <div class="cell cell-5" onclick="setValue('SIX')">"6"<br>x4</div>
-              <div class="cell cell-6" onclick="setValue('SEVEN')">"7"<br>x3</div>
-              <div class="cell cell-7" onclick="setValue('EIGHT')">"8"<br>x4</div>
-              <div class="cell cell-8" onclick="setValue('NINE')">"9"<br>x5</div>
-              <div class="cell cell-9" onclick="setValue('TEN')">"10"<br>x6</div>
-              <div class="cell cell-10" onclick="setValue('ELEVEN')">"11"<br>x9</div>
-              <div class="cell cell-11" onclick="setValue('TWELVE')">"12"<br>x18</div>
+            <div class="float-child">
+              <div class="evenodd">
+                <div class="cell cell-even" onclick="setValue('EVEN')">Even<br>x2</div>
+                <div class="cell cell-odd" onclick="setValue('ODD')">Odd<br>x2</div>
+              </div>
             </div>
-            <div class="rangediv">
-               <span class="rangevalue" id="rangeValue2">0</span>
-               <Input class="range" type="range" name "" value="0" min="0" max="100" onChange="rangeSlide2(this.value)" onmousemove="rangeSlide2(this.value)" id="myRange2"></Input>
-             </div>
-             <script type="text/javascript">
-                function rangeSlide2(value) {
-                document.getElementById('rangeValue2').innerHTML = value;
-              }
-            </script>
+
+            <div class="float-child">
+              <div class="rangediv">
+                 <span class="rangevalue" id="rangeValue">0</span>
+                 <Input class="range" type="range" name "" value="0" min="0" max="100" onChange="rangeSlide(this.value)" onmousemove="rangeSlide(this.value)" id="myRange"></Input>
+               </div>
+               <script type="text/javascript">
+                  function rangeSlide(value) {
+                  document.getElementById('rangeValue').innerHTML = value;
+                }
+              </script>
+            </div>
+
+          </div>
+
+
+          <div class="float-container">
+
+            <div class="float-child">
+              <div class="cellcontainer">
+                 <div class="cell cell-1" onclick="setValue('TWO')">"2"<br>x18</div>
+                 <div class="cell cell-2" onclick="setValue('THREE')">"3"<br>x9</div>
+                 <div class="cell cell-3" onclick="setValue('FOUR')">"4"<br>x6</div>
+                 <div class="cell cell-4" onclick="setValue('FIVE')">"5"<br>x5</div>
+                 <div class="cell cell-5" onclick="setValue('SIX')">"6"<br>x4</div>
+                 <div class="cell cell-6" onclick="setValue('SEVEN')">"7"<br>x3</div>
+                 <div class="cell cell-7" onclick="setValue('EIGHT')">"8"<br>x4</div>
+                 <div class="cell cell-8" onclick="setValue('NINE')">"9"<br>x5</div>
+                 <div class="cell cell-9" onclick="setValue('TEN')">"10"<br>x6</div>
+                 <div class="cell cell-10" onclick="setValue('ELEVEN')">"11"<br>x9</div>
+                 <div class="cell cell-11" onclick="setValue('TWELVE')">"12"<br>x18</div>
+               </div>
+            </div>
+
+            <div class="float-child">
+              <div class="rangediv">
+                 <span class="rangevalue" id="rangeValue2">0</span>
+                 <Input class="range" type="range" name "" value="0" min="0" max="100" onChange="rangeSlide2(this.value)" onmousemove="rangeSlide2(this.value)" id="myRange2"></Input>
+               </div>
+               <script type="text/javascript">
+                  function rangeSlide2(value) {
+                  document.getElementById('rangeValue2').innerHTML = value;
+                }
+              </script>
+            </div>
+
+          </div>
+
+
+
+
 
             <br>
             <button id="bet" onclick="bet()">BET!</button>
@@ -408,6 +450,8 @@
             <h2 id="winner"></h2>
           </div>
           <div class="col-md-6 px-5 my-auto">
+
+            <button id="search" onclick="searchRoom()">Search a game room!</button>
 
             <div id="chatCard" class="card">
               <div class="card-header d-flex justify-content-between align-items-center p-3">

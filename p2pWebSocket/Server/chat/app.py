@@ -364,10 +364,10 @@ class Room():
 
         ### NAIVE ###
         #random call
-        dice1 = random.randint(1, 6)
+        """dice1 = random.randint(1, 6)
         dice2 = random.randint(1, 6)
         result = [dice1, dice2] #example
-        total = sum(result)
+        total = sum(result)"""
         #############
 
         ### RNG ###
