@@ -311,12 +311,15 @@ consensus = Consensus(beb, pfd)
 class Rng():
 
     def random_dice(self):
-        dice1 = requests.get(f'http://{RNG}/api/random').json()
+        """dice1 = requests.get(f'http://{RNG}/api/random').json()
         print(dice1)
         dice1 = dice1["random_number"]
         dice2 = requests.get(f'http://{RNG}/api/random').json()["random_number"]
         print(dice2)
-        return dice1+dice2
+        return dice1+dice2"""
+        dice = requests.get(f'http://{RNG}/api/random').json()["random_number"]
+        eprint(dice)
+        return dice
 
 class Room():
     def __init__ (self, roomId, startId, rng=Rng()):
@@ -355,7 +358,7 @@ class Room():
         return list(self.socketsToUsers.items())
 
     def startGame(self):
-        res = {"type" : "START"}
+        res = {"type" : "START", "points" : self.points}
         for sockets in self.players:
             socketio.emit('message', json.dumps(res), room=sockets)
         self.timer.start()
@@ -373,7 +376,16 @@ class Room():
         #############
 
         ### RNG ###
-        total = self.rng.random_dice()
+        dice1 = self.rng.random_dice()
+        dice2 = self.rng.random_dice()
+        result = [dice1, dice2]
+        total = sum(result)
+
+        for sockets in self.players:
+            res = {"type" : "DICE", "dice1": dice1, "dice2": dice2}
+            socketio.emit('message', json.dumps(res), room=sockets)
+
+        sleep(6)
 
         eprint(total)
 
