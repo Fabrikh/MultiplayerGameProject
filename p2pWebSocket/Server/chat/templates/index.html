@@ -41,23 +41,25 @@
           text-align: center;
           padding: 0.5rem;
         }
-        .cell:hover {
-          color: black;
-        }
         .player {
           background: blue;
         }
+
+        .cell:hover {
+          filter: brightness(200%);
+        }
+
         .cell-even, .cell-odd{
-          background: red;
+          background: darkgreen;
         }
         .cell-1, .cell-11 {
-          background: red;
+          background: #750404;
         }
         .cell-2, .cell-3, .cell-4, .cell-8, .cell-9, .cell-10 {
-          background: orange;
+          background: #a34108;
         }
         .cell-5, .cell-6, .cell-7 {
-          background: green;
+          background: darkgreen;
         }
         .rangediv {
           margin-left: 20px;
@@ -382,6 +384,8 @@
         function setValue2(value) {
             betValue2 = value;
         }
+        //darkgreen #5ac53a
+
 
 
     </script>
@@ -407,9 +411,20 @@
 
             <div class="float-child">
               <div class="evenodd">
-                <div class="cell cell-even" onclick="setValue('EVEN')">Even<br>x2</div>
-                <div class="cell cell-odd" onclick="setValue('ODD')">Odd<br>x2</div>
+                <div class="cell cell-even" onclick="setValue('EVEN'); changeColor(this)" id="even">Even<br>x2</div>
+                <div class="cell cell-odd" onclick="setValue('ODD'); changeColor(this)" id="odd">Odd<br>x2</div>
               </div>
+              <script>
+              function changeColor(element) {
+                if(element.id=="even"){
+                  element.style.backgroundColor = "#00c802";
+                  document.getElementById("odd").style.backgroundColor = "darkgreen";
+                }else{
+                  element.style.backgroundColor = "#00c802";
+                  document.getElementById("even").style.backgroundColor = "darkgreen";
+                }
+              }
+              </script>
             </div>
 
             <div class="float-child">
@@ -431,18 +446,44 @@
 
             <div class="float-child">
               <div class="cellcontainer">
-                 <div class="cell cell-1" onclick="setValue2('TWO')">"2"<br>x18</div>
-                 <div class="cell cell-2" onclick="setValue2('THREE')">"3"<br>x9</div>
-                 <div class="cell cell-3" onclick="setValue2('FOUR')">"4"<br>x6</div>
-                 <div class="cell cell-4" onclick="setValue2('FIVE')">"5"<br>x5</div>
-                 <div class="cell cell-5" onclick="setValue2('SIX')">"6"<br>x4</div>
-                 <div class="cell cell-6" onclick="setValue2('SEVEN')">"7"<br>x3</div>
-                 <div class="cell cell-7" onclick="setValue2('EIGHT')">"8"<br>x4</div>
-                 <div class="cell cell-8" onclick="setValue2('NINE')">"9"<br>x5</div>
-                 <div class="cell cell-9" onclick="setValue2('TEN')">"10"<br>x6</div>
-                 <div class="cell cell-10" onclick="setValue2('ELEVEN')">"11"<br>x9</div>
-                 <div class="cell cell-11" onclick="setValue2('TWELVE')">"12"<br>x18</div>
+                 <div class="cell cell-1" onclick="setValue2('TWO'); changeColorGrid(this)" id="two">"2"<br>x18</div>
+                 <div class="cell cell-2" onclick="setValue2('THREE'); changeColorGrid(this)" id="three">"3"<br>x9</div>
+                 <div class="cell cell-3" onclick="setValue2('FOUR'); changeColorGrid(this)" id="four">"4"<br>x6</div>
+                 <div class="cell cell-4" onclick="setValue2('FIVE'); changeColorGrid(this)" id="five">"5"<br>x5</div>
+                 <div class="cell cell-5" onclick="setValue2('SIX'); changeColorGrid(this)" id="six">"6"<br>x4</div>
+                 <div class="cell cell-6" onclick="setValue2('SEVEN'); changeColorGrid(this)" id="seven">"7"<br>x3</div>
+                 <div class="cell cell-7" onclick="setValue2('EIGHT'); changeColorGrid(this)" id="eight">"8"<br>x4</div>
+                 <div class="cell cell-8" onclick="setValue2('NINE'); changeColorGrid(this)" id="nine">"9"<br>x5</div>
+                 <div class="cell cell-9" onclick="setValue2('TEN'); changeColorGrid(this)" id="ten">"10"<br>x6</div>
+                 <div class="cell cell-10" onclick="setValue2('ELEVEN'); changeColorGrid(this)" id="eleven">"11"<br>x9</div>
+                 <div class="cell cell-11" onclick="setValue2('TWELVE'); resetColor()" id="twelve">"12"<br>x18</div>
                </div>
+               <script>
+               function changeColorGrid(element) {
+                 resetColor();
+                 if(element.id=="two"||element.id=="twelve"){
+                   element.style.backgroundColor = "#ea0706";
+                 }else if(element.id=="three"||element.id=="four"||element.id=="five"||element.id=="nine"||element.id=="ten"||element.id=="eleven"){
+                   element.style.backgroundColor = "#ff8210";
+                 }else{
+                   element.style.backgroundColor = "#00c802";
+                 }
+               }
+
+               function resetColor() {
+                 document.getElementById("two").style.backgroundColor = "#750404";
+                 document.getElementById("three").style.backgroundColor = "#a34108";
+                 document.getElementById("four").style.backgroundColor = "#a34108";
+                 document.getElementById("five").style.backgroundColor = "#a34108";
+                 document.getElementById("six").style.backgroundColor = "darkgreen";
+                 document.getElementById("seven").style.backgroundColor = "darkgreen";
+                 document.getElementById("eight").style.backgroundColor = "darkgreen";
+                 document.getElementById("nine").style.backgroundColor = "#a34108";
+                 document.getElementById("ten").style.backgroundColor = "#a34108";
+                 document.getElementById("eleven").style.backgroundColor = "#a34108";
+                 document.getElementById("twelve").style.backgroundColor = "#750404";
+               }
+               </script>
             </div>
 
             <div class="float-child">
