@@ -309,17 +309,17 @@ rb = ReliableBroadcast(beb, pfd)
 consensus = Consensus(beb, pfd)
 
 class Rng():
+    def __init__(self):
+        self.dice1 = self.generate_random_number()
+        self.dice2 = self.generate_random_number()
 
+    def generate_random_number(self):
+        return requests.get(f'http://{RNG}/api/random').json()["random_number"]
+    
     def random_dice(self):
-        """dice1 = requests.get(f'http://{RNG}/api/random').json()
-        print(dice1)
-        dice1 = dice1["random_number"]
-        dice2 = requests.get(f'http://{RNG}/api/random').json()["random_number"]
-        print(dice2)
-        return dice1+dice2"""
-        dice = requests.get(f'http://{RNG}/api/random').json()["random_number"]
-        eprint(dice)
-        return dice
+        res = [self.dice1, self.dice2]
+        eprint(res)
+        return res
 
 class Room():
     def __init__ (self, roomId, startId, rng=Rng()):
@@ -367,19 +367,14 @@ class Room():
         eprint("ENDEDTURN")
         self.turn += 1
 
-        ### NAIVE ###
-        #random call
-        """dice1 = random.randint(1, 6)
-        dice2 = random.randint(1, 6)
-        result = [dice1, dice2] #example
-        total = sum(result)"""
-        #############
-
         ### RNG ###
-        dice1 = self.rng.random_dice()
-        dice2 = self.rng.random_dice()
-        result = [dice1, dice2]
+        result = self.rng.random_dice()
+        dice1 = result[0]
+        dice2 = result[1]
         total = sum(result)
+
+        self.rng = Rng()
+        ###########
 
         for sockets in self.players:
             res = {"type" : "DICE", "dice1": dice1, "dice2": dice2}
