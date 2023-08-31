@@ -39,7 +39,8 @@
           color: white;
           font-size: 1rem;
           text-align: center;
-          padding: 0.5rem;
+          padding: 1rem;
+          transition: all 0.3s ease;
         }
         .player {
           background: blue;
@@ -47,6 +48,7 @@
 
         .cell:hover {
           filter: brightness(200%);
+          transform: scale(1.1);
         }
 
         .cell-even, .cell-odd{
@@ -411,8 +413,8 @@
 
             <div class="float-child">
               <div class="evenodd">
-                <div class="cell cell-even" onclick="setValue('EVEN'); changeColor(this)" id="even">Even<br>x2</div>
-                <div class="cell cell-odd" onclick="setValue('ODD'); changeColor(this)" id="odd">Odd<br>x2</div>
+                <div class="cell cell-even" onclick="setValue('EVEN'); changeColor(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="even">EVEN</div>
+                <div class="cell cell-odd" onclick="setValue('ODD'); changeColor(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="odd">ODD</div>
               </div>
               <script>
               function changeColor(element) {
@@ -424,7 +426,7 @@
                   document.getElementById("even").style.backgroundColor = "darkgreen";
                 }
               }
-              </script>
+            </script>
             </div>
 
             <div class="float-child">
@@ -446,17 +448,17 @@
 
             <div class="float-child">
               <div class="cellcontainer">
-                 <div class="cell cell-1" onclick="setValue2('TWO'); changeColorGrid(this)" id="two">"2"<br>x18</div>
-                 <div class="cell cell-2" onclick="setValue2('THREE'); changeColorGrid(this)" id="three">"3"<br>x9</div>
-                 <div class="cell cell-3" onclick="setValue2('FOUR'); changeColorGrid(this)" id="four">"4"<br>x6</div>
-                 <div class="cell cell-4" onclick="setValue2('FIVE'); changeColorGrid(this)" id="five">"5"<br>x5</div>
-                 <div class="cell cell-5" onclick="setValue2('SIX'); changeColorGrid(this)" id="six">"6"<br>x4</div>
-                 <div class="cell cell-6" onclick="setValue2('SEVEN'); changeColorGrid(this)" id="seven">"7"<br>x3</div>
-                 <div class="cell cell-7" onclick="setValue2('EIGHT'); changeColorGrid(this)" id="eight">"8"<br>x4</div>
-                 <div class="cell cell-8" onclick="setValue2('NINE'); changeColorGrid(this)" id="nine">"9"<br>x5</div>
-                 <div class="cell cell-9" onclick="setValue2('TEN'); changeColorGrid(this)" id="ten">"10"<br>x6</div>
-                 <div class="cell cell-10" onclick="setValue2('ELEVEN'); changeColorGrid(this)" id="eleven">"11"<br>x9</div>
-                 <div class="cell cell-11" onclick="setValue2('TWELVE'); resetColor()" id="twelve">"12"<br>x18</div>
+                 <div class="cell cell-1" onclick="setValue2('TWO'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="two">2</div>
+                 <div class="cell cell-2" onclick="setValue2('THREE'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="three">3</div>
+                 <div class="cell cell-3" onclick="setValue2('FOUR'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="four">4</div>
+                 <div class="cell cell-4" onclick="setValue2('FIVE'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="five">5</div>
+                 <div class="cell cell-5" onclick="setValue2('SIX'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="six">6</div>
+                 <div class="cell cell-6" onclick="setValue2('SEVEN'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="seven">7</div>
+                 <div class="cell cell-7" onclick="setValue2('EIGHT'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="eight">8</div>
+                 <div class="cell cell-8" onclick="setValue2('NINE'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="nine">9</div>
+                 <div class="cell cell-9" onclick="setValue2('TEN'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="ten">10</div>
+                 <div class="cell cell-10" onclick="setValue2('ELEVEN'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="eleven">11</div>
+                 <div class="cell cell-11" onclick="setValue2('TWELVE'); changeColorGrid(this)" onmouseover="changeText(this)" onmouseout="resetText(this)" id="twelve">12</div>
                </div>
                <script>
                function changeColorGrid(element) {
@@ -575,6 +577,55 @@
             initialValueSlider2 = slider2Value;
             rangeSlide2(slider2.value);
         });
+
+        function changeText(element) {
+          if(element.id=="even"||element.id=="odd"){
+            element.innerHTML = "x2";
+          }else if(element.id=="two"||element.id=="twelve"){
+            element.innerHTML = "x18";
+          }else if(element.id=="three"||element.id=="eleven"){
+            element.innerHTML = "x9";
+          }else if(element.id=="four"||element.id=="ten"){
+            element.innerHTML = "x6";
+          }else if(element.id=="five"||element.id=="nine"){
+            element.innerHTML = "x5";
+          }else if(element.id=="six"||element.id=="eight"){
+            element.innerHTML = "x4";
+          }else if(element.id=="seven"){
+            element.innerHTML = "x3";
+          }
+        }
+
+        function resetText(element) {
+          if(element.id=="even"){
+            element.innerHTML = "EVEN";
+          }else if(element.id=="odd"){
+            element.innerHTML = "ODD";
+          }else if(element.id=="two"){
+            element.innerHTML = "2";
+          }else if(element.id=="three"){
+            element.innerHTML = "3";
+          }else if(element.id=="four"){
+            element.innerHTML = "4";
+          }else if(element.id=="five"){
+            element.innerHTML = "5";
+          }else if(element.id=="six"){
+            element.innerHTML = "6";
+          }else if(element.id=="seven"){
+            element.innerHTML = "7";
+          }else if(element.id=="eight"){
+            element.innerHTML = "8";
+          }else if(element.id=="nine"){
+            element.innerHTML = "9";
+          }else if(element.id=="ten"){
+            element.innerHTML = "10";
+          }else if(element.id=="eleven"){
+            element.innerHTML = "11";
+          }else if(element.id=="twelve"){
+            element.innerHTML = "12";
+          }
+        }
+
     </script>
   </body>
 </html>
