@@ -347,7 +347,6 @@ class Room():
         self.placedBet2 = {}
         self.points = {}
         self.points[startId[1]] = 100
-        self.rng = rng
         self.endOfGame = False
 
     def close(self):
@@ -660,6 +659,7 @@ def deliver_message():
             
         elif res["type"] == "RNG":
             dice[res["roomId"]] = (res["dice1"], res["dice2"])
+
         else:
             response = json.dumps(res)
             socketio.emit('message', response, namespace = '/')
