@@ -8,6 +8,8 @@ from flask_socketio import SocketIO
 import json
 import random
 
+import traceback
+
 
 import sys
 import logging
@@ -66,7 +68,9 @@ class P2PLink():
 
             eprint(f"[EXCEPTION] {type(e)} found!")
             eprint(e)
-
+            traceback.print_exc()
+            if type(e) == RuntimeError: sys.exit(1)
+            
 class BestEffortBroadcast():
 
     def __init__(self,p2pLink):
