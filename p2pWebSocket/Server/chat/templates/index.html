@@ -124,6 +124,19 @@
           display: inline-block;
           font-size: 16px;
         }
+        #leave {
+          width: 100%;
+          margin-top: 40px;
+          margin-bottom: 40px;
+          background-color: #ff0000;
+          border: none;
+          color: white;
+          padding: 15px 32px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 16px;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script type="text/javascript">
@@ -269,7 +282,9 @@
                     } else if(mex.type == "ENTER_ROOM") {
                         //document.getElementById("chat").innerHTML += `<div> You are now in the room (ID: ${mex.roomId})</div>`;
                         writeOnChat(`You are now in the room (ID: ${mex.roomId})`,"System")
-                    } else if(mex.type == "START"){
+                    } else if(mex.type == "LEFTROOM"){ 
+                      writeOnChat(`User ${mex.user} left the room (ID: ${mex.roomId})`,"System")
+                    }else if(mex.type == "START"){
                         //document.getElementById("chat").innerHTML += `<div> STARTING THE GAME</div>`;
                         writeOnChat(`STARTING THE GAME`,"System")
                         updateScoreDisplay(mex.points)
@@ -302,6 +317,8 @@
                               }
                           }
                           document.getElementById("winner").textContent = `WINNER: ${winner}! Total points: ${max}!`;
+                          writeOnChat(`The lobby will remain open for a new match!\nIf you don't want to play with the same players, please search another room. `,"System")
+
                       } else if(mex.type == "DICE"){
                         let dice1 = mex.dice1;
                         let dice2 = mex.dice2;
@@ -371,9 +388,17 @@
         }
 
         function searchRoom() {
-            var myButton = document.getElementById("search");
-            myButton.setAttribute("disabled", "disabled");
+            var myButtonSearch = document.getElementById("search").disabled = true;
+            var myButtonLeave = document.getElementById("leave").disabled = false;
+            
             socket.emit('message', JSON.stringify({ header: [],type: "SEARCHGAME", id: myId }));
+        }
+
+        function leaveRoom() {
+            var myButtonSearch = document.getElementById("search").disabled = false;
+            var myButtonLeave = document.getElementById("leave").disabled = true;
+            
+            socket.emit('message', JSON.stringify({ header: [],type: "LEAVEGAME", id: myId }));
         }
 
         function bet() {
@@ -414,7 +439,7 @@
               </div>
             </div>
 
-
+            
           <br>
           <div class="float-container">
 
@@ -508,11 +533,6 @@
             </div>
 
           </div>
-
-
-
-
-
             <br>
             <button id="bet" onclick="bet()">BET!</button>
             <h2 id="recap" style="color:white"></h2>
@@ -522,7 +542,7 @@
           <div class="col-md-6 px-5 my-auto">
 
             <button id="search" onclick="searchRoom()">Search a game room!</button>
-
+            <button id="leave" onclick="leaveRoom()" disabled>Leave the game room!</button>
             <div class="cellcontainer">
                <div class="cell-scoreboard player">
                  <div id="player1NameDiv" style="color:white">Player1</div>

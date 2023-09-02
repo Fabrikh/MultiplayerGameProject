@@ -337,11 +337,17 @@ class Room():
         self.points = {}
         self.points[startId[1]] = 100
         self.rng = rng
+        self.endOfGame = False
 
     def close(self):
         self.open = False
         close_the_room(self.roomId)
         self.startGame()
+
+    def openRoom(self):
+        self.open = True
+        self.endOfGame = False
+        open_the_room(self.roomId)
 
     def newPlayer(self, newId):
 
@@ -349,6 +355,17 @@ class Room():
         self.socketsToUsers[newId[0]] = newId[1]
         self.points[newId[1]] = 100
         eprint(self.players)
+
+    def removePlayer(self, playerId):
+        self.players.discard(playerId[0])
+        self.socketsToUsers.pop(playerId[0], None)
+        self.points.pop(playerId[1], None)
+        self.bets.pop(playerId[0], None)
+        self.placedBet.pop(playerId[0], None)
+        if self.endOfGame:
+            if len(self.players) < 3:
+                self.openRoom()
+
 
     def checkClosure(self):
         if len(self.players) >= 3:
@@ -361,6 +378,7 @@ class Room():
         res = {"type" : "START", "points" : self.points}
         for sockets in self.players:
             socketio.emit('message', json.dumps(res), room=sockets)
+        self.timer = Timer(20.0, self.endTurn)
         self.timer.start()
 
     def endTurn(self):
@@ -474,9 +492,28 @@ class Room():
 
     def end(self):
         eprint("END GAME")
+        self.endOfGame = True
         for sockets in self.players:
             res = {"type" : "ENDGAME", "points": self.points}
             socketio.emit('message', json.dumps(res), room=sockets)
+        
+        self.turn = 0
+        self.bets = {}
+        self.placedBet = {}
+        self.bets2 = {}
+        self.placedBet2 = {}
+        
+        for players in self.points:
+            self.points[players] = 100
+        
+
+        self.timer = Timer(20.0, self.restart)
+        self.timer.start()
+    
+    def restart(self):
+        if self.endOfGame:
+            self.startGame()
+
 
 
 @app.route('/')
@@ -517,7 +554,7 @@ def deliver_message():
 
     if head == "BEBroadcast":
 
-        if res["type"] == "RESPONSE" or res["type"] == "DISCONNECTION" or res["type"] == "NEWROOM" or res["type"] == "ADDTOROOM" or res["type"] == "GAMEMOVE":
+        if res["type"] == "RESPONSE" or res["type"] == "DISCONNECTION" or res["type"] == "NEWROOM" or res["type"] == "ADDTOROOM" or res["type"] == "LEAVETHEROOM" or res["type"] == "GAMEMOVE":
             rb.deliver(res)
 
         if res["type"] == "STARTPROPOSAL":
@@ -574,6 +611,21 @@ def deliver_message():
 
         elif res["type"] == "GAMEMOVE":
             closedRooms[res["roomId"]].receiveBet(res["startId"], res["bet"], res["placedBet"], res["bet2"], res["placedBet2"])
+        
+        elif res["type"] == "LEAVETHEROOM":
+            newres = { "type": "LEFTROOM", "roomId": res["roomId"], "user": res["user"]}
+            if res["roomId"] in openRooms:
+                playerlist = openRooms[res["roomId"]].getPlayers()
+                openRooms[res["roomId"]].removePlayer(res["startId"])
+                for sockets in playerlist:
+                    socketio.emit('message', json.dumps(newres), room=sockets[0])
+                
+            elif res["roomId"] in closedRooms:
+                playerlist = closedRooms[res["roomId"]].getPlayers()
+                closedRooms[res["roomId"]].removePlayer(res["startId"])
+                for sockets in playerlist:
+                    socketio.emit('message', json.dumps(newres), room=sockets[0])
+            
         else:
             response = json.dumps(res)
             socketio.emit('message', response, namespace = '/')
@@ -675,6 +727,21 @@ def add_to_room(startId, user):
 def close_the_room(roomId):
     closedRooms[roomId] = openRooms.pop(roomId, None)
 
+def open_the_room(roomId):
+    openRooms[roomId] = closedRooms.pop(roomId, None)
+
+def leave_the_room(startId, user):
+    USER = (startId, user)
+    for roomId in openRooms:
+        if USER in openRooms[roomId].getPlayers():
+            res = { "type" : "LEAVETHEROOM", "roomId" : roomId, "starter": MY_ADDRESS, "startId": USER, "user" : user}
+            return res
+        
+    for roomId in closedRooms:
+        if USER in closedRooms[roomId].getPlayers():
+            res = { "type" : "LEAVETHEROOM", "roomId" : roomId, "starter": MY_ADDRESS, "startId": USER, "user" : user}
+            return res
+    return None
 
 
 @socketio.on('message')
@@ -700,6 +767,11 @@ def handle_message(message):
 
         else:
             res = add_to_room(request.sid, mex["id"])
+
+    elif mex["type"] == "LEAVEGAME":
+        res = leave_the_room(request.sid, mex["id"])
+        if res == None:
+            return None
 
     elif mex["type"] == "GAME_MOVE":
         res = {"type": "GAMEMOVE", "roomId": mex["roomId"], "bet": mex["bet"], "placedBet": mex["placedBet"], "bet2": mex["bet2"], "placedBet2": mex["placedBet2"], "startId": request.sid}
