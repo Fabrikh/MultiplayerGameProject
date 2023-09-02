@@ -36,6 +36,7 @@ decisionID = 0
 
 openRooms = {}
 closedRooms = {}
+dice = {}
 
 connected_clients = {}
 
@@ -316,13 +317,19 @@ class Rng():
     def generate_random_number(self):
         return requests.get(f'http://{RNG}/api/random').json()["random_number"]
     
-    def random_dice(self):
+    def random_dice(self, caller):
         res = [self.dice1, self.dice2]
+
+        self.dice1 = self.generate_random_number()
+        self.dice2 = self.generate_random_number()
+                
         eprint(res)
         return res
 
+rng = Rng()
+
 class Room():
-    def __init__ (self, roomId, startId, rng=Rng()):
+    def __init__ (self, roomId, startId):
         self.roomId = roomId
         self.players = {startId[0]}
         self.socketsToUsers = {}
@@ -336,7 +343,6 @@ class Room():
         self.placedBet2 = {}
         self.points = {}
         self.points[startId[1]] = 100
-        self.rng = rng
 
     def close(self):
         self.open = False
@@ -368,12 +374,29 @@ class Room():
         self.turn += 1
 
         ### RNG ###
-        result = self.rng.random_dice()
-        dice1 = result[0]
-        dice2 = result[1]
-        total = sum(result)
+        global dice
 
-        self.rng = Rng()
+        if MY_ADDRESS in self.roomId:
+            result = rng.random_dice((MY_ADDRESS, self.roomId))
+            dice1 = result[0]
+            dice2 = result[1]
+            total = sum(result)
+
+            global messageID
+            message = {"header": [], "type": "RNG", "serverSender": MY_ADDRESS, "messageID": None, "roomId": self.roomId, "dice1": dice1, "dice2": dice2}
+            with idLock:
+                message["messageID"] = messageID
+                messageID += 1            
+            rb.broadcast(message)
+        else:
+            dice1_2 = dice.get(self.roomId, None)
+
+            while dice1_2 == None:
+                dice1_2 = dice.get(self.roomId, None)
+            
+            dice1 = dice1_2[0]
+            dice2 = dice1_2[1]
+            total = sum([dice1, dice2])
         ###########
 
         for sockets in self.players:
@@ -493,6 +516,7 @@ def index():
 def deliver_message():
     global messageID
     global openRooms
+    global dice
     # Get the JSON message from the request body
     res = request.get_json()
     serverSender = res["serverSender"]
@@ -533,6 +557,9 @@ def deliver_message():
 
         if res["type"] == "DECIDED":
             consensus.deliver_decided(res)
+        
+        if res["type"] == "RNG":
+            rb.deliver(res)
 
         #eprint(f"[{MY_ADDRESS}] BEB Delivery")
         return "received"
@@ -574,6 +601,8 @@ def deliver_message():
 
         elif res["type"] == "GAMEMOVE":
             closedRooms[res["roomId"]].receiveBet(res["startId"], res["bet"], res["placedBet"], res["bet2"], res["placedBet2"])
+        elif res["type"] == "RNG":
+            dice[res["roomId"]] = (res["dice1"], res["dice2"])
         else:
             response = json.dumps(res)
             socketio.emit('message', response, namespace = '/')
