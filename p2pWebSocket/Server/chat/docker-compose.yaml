@@ -16,6 +16,7 @@ services:
     networks:
       - backend
     restart: on-failure
+
   server1:
     build:
       context: .

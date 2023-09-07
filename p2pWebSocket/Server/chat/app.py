@@ -44,6 +44,15 @@ connected_clients = {}
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+    
+def startRecovery():
+        
+    with linksLock:
+        for link in LINKS:
+            eprint("SEND")
+            session.post(f'http://{link}/api/recover', json={"type":"RECOVER","process":MY_ADDRESS})
+            
+    session.post(f'http://{LOADBALANCER}/api/recover', json={'process': MY_ADDRESS})
 
 with open(sys.argv[2]) as linkConfigFile:
 
@@ -144,6 +153,11 @@ class PerfectFailureDetector():
 
             eprint(f"[EXCEPTION] {type(e)} found!")
             eprint(e)
+            
+    def recovered(self,process):
+        
+        self.detected.discard(process)
+        self.alive.add(process)
 
 class ReliableBroadcast():
 
@@ -177,6 +191,12 @@ class ReliableBroadcast():
         if process in self.fromP:
             for message in self.fromP[process]:
                 beb.broadcast(message)
+                
+    def recovered(self, process):
+        with self.aliveLock:
+            self.alive.add(process)
+            if self.fromP[process]:
+                self.fromP[process] = []
 
     def check_message(self, message, messages):
         for mex in messages:
@@ -203,6 +223,10 @@ class Consensus():
     def crashed(self, process):
         with self.correctLock:
             self.correct.discard(process)
+            
+    def recovered(self, process):
+        with self.correctLock:
+            self.correct.add(process)
 
     def propose_value(self, value, id, socket, sender):
         eprint(f"[CONSENSUS] proposal: {value}")
@@ -312,6 +336,12 @@ beb = BestEffortBroadcast(p2p)
 pfd = PerfectFailureDetector(p2p,deltaTime=5.0)
 rb = ReliableBroadcast(beb, pfd)
 consensus = Consensus(beb, pfd)
+
+session = FuturesSession()
+
+
+
+startRecovery()
 
 class Rng():
     def __init__(self):
@@ -688,6 +718,27 @@ def crash_message():
         rb.crashed(crashedProcess)
 
         return "crash_ACK"
+    
+@app.route('/api/recover', methods=['POST'])
+def recover_message():
+    # Get the JSON message from the request body
+    res = request.get_json()
+    #eprint(f"CRASH_MESSAGE: {res}")
+
+    if res["type"] == "RECOVER":
+
+        recoveredProcess = res["process"]
+
+        eprint(f"[RECOVER NOTIFICATION] Ha recuperato {recoveredProcess}")
+
+        with linksLock:
+            LINKS.add(recoveredProcess)
+            pfd.recovered(recoveredProcess)
+
+        consensus.recovered(recoveredProcess)
+        rb.recovered(recoveredProcess)
+
+        return "recover_ACK"
 
 @app.route('/api/consensus', methods=['POST'])
 def decision_message():
@@ -865,6 +916,10 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
 
         socketio.run(app, host='0.0.0.0', port=sys.argv[1], allow_unsafe_werkzeug=True)
+        
+        
+        
+        
     else:
 
         raise Exception("Wrong number of arguments provided!")

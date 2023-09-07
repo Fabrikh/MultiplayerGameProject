@@ -3,6 +3,8 @@ import requests
 import sys
 import json
 import re
+from threading import Timer
+from time import sleep
 
 app = Flask(__name__)
 
@@ -16,6 +18,9 @@ with open(sys.argv[1]) as linkConfigFile:
 
 # Dictionary to store active connections for each server
 SERVERS = dict(zip(LINKS, [0] * len(LINKS)))
+
+def recoverServer(server):
+    SERVERS[server] = 0
 
 @app.route('/')
 def redirect_request():
@@ -80,6 +85,22 @@ def handle_crash():
         eprint(f"CONNECTED VALUES: {servers} - {SERVERS[servers]}")
 
     return "Increased"
+
+@app.route('/api/recover', methods=['POST'])
+def handle_recover():
+    eprint(f"RECOVER")
+    res = request.get_json()
+
+    if res['process'] and res['process'] not in SERVERS:
+
+        SERVERS[res['process']] = 0
+        #timer = Timer(20, recoverServer, [res['process']])
+        #timer.start()
+    
+    for servers in SERVERS:
+        eprint(f"CONNECTED VALUES: {servers} - {SERVERS[servers]}")
+
+    return "Recovered"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3005)
