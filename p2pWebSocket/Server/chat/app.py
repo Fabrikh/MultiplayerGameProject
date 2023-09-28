@@ -577,11 +577,17 @@ class Room():
 def index():
     #eprint(f"RICHIESTA", request.args.get('redirected'))
     #eprint(f"LOCAL ADDR", request.remote_addr)
-
+    username = request.cookies.get('username')
     if(request.args.get('redirected')):
-        return render_template('index.html',SOCKET_PORT=sys.argv[1])
+        if(not username):
+            return render_template('login.html', SOCKET_PORT=sys.argv[1], cookies=username)
+        else:
+            return render_template('index.html', SOCKET_PORT=sys.argv[1], cookies=username)
 
-    return "You don't have permissions!"
+@app.route('/register')
+def register():
+   return render_template('register.html')
+    
 
 @app.route('/api/deliver', methods=['POST'])
 def deliver_message():

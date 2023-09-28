@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, redirect, render_template, session, url_for
+from flask import Flask, request, jsonify, redirect, render_template,make_response, session, url_for
 import requests
 import sys
 import json
@@ -49,8 +49,9 @@ def register():
         conn.commit()
         conn.close()
 
-        response = {"message": "User added successfully"}
-        return jsonify(response), 201  # HTTP 201 Created status code
+        resp = make_response(redirect('http://localhost:3005/'))
+        return resp
+    
     except Exception as e:
         response = {"error": str(e)}
         return jsonify(response), 400  # HTTP 400 Bad Request status code
@@ -72,9 +73,11 @@ def login():
         conn.close()
 
         if user is not None:
-            # Store user data in the session
-            session["username"] = provided_username
-            return redirect(url_for("user_dashboard", username=provided_username))
+            username = provided_username
+            resp = make_response(redirect('http://localhost:3005/'))
+            resp.set_cookie('username', username)
+            # resp.set_cookie('avatar', user[3])
+            return resp
         else:
             response = {
                 "success": False,
@@ -132,7 +135,7 @@ def user_dashboard():
 
     conn.close()
 
-    if "username" in session:
+    if (username == request.cookies.get('username')):
         return render_template("dashboard.html", username=username, avatar=avatar[3])
     else:
         return "You must be logged in to access the dashboard"
