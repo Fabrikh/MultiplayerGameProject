@@ -1,0 +1,72 @@
+version: '3'
+networks:
+  backend:
+    driver: bridge
+services:
+  server0:
+    build:
+      context: .
+      dockerfile: ./docker/server0/Dockerfile
+    depends_on:
+      - loadbalancer
+      - rng
+      - database
+    ports:
+     - "3000:3000"
+    networks:
+      - backend
+    restart: on-failure
+
+  server1:
+    build:
+      context: .
+      dockerfile: ./docker/server1/Dockerfile
+    depends_on:
+      - loadbalancer
+      - rng
+      - database
+    ports:
+     - "3001:3001"
+    networks:
+      - backend
+    restart: on-failure
+  server2:
+    build:
+      context: .
+      dockerfile: ./docker/server2/Dockerfile
+    depends_on:
+      - loadbalancer
+      - rng
+      - database
+    ports:
+     - "3002:3002"
+    networks:
+      - backend
+    restart: on-failure
+  loadbalancer:
+    build:
+      context: ./loadBalancer/
+      dockerfile: ./Dockerfile
+    ports:
+      - "3005:3005"
+    networks:
+      - backend
+    restart: on-failure
+  rng:
+    build:
+      context: ./rng/
+      dockerfile: ./Dockerfile
+    ports:
+      - "3999:3999"
+    networks:
+      - backend
+    restart: on-failure
+  database:
+    build:
+      context: ./database/
+      dockerfile: ./Dockerfile
+    ports:
+      - "4000:4000"
+    networks:
+      - backend
+    restart: on-failure

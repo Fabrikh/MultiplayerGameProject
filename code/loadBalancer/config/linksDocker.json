@@ -1,0 +1,4 @@
+{
+    "links":["server0:3000", "server1:3001","server2:3002"],
+    "localLinks":["localhost:3000", "localhost:3001","localhost:3002"]
+}
