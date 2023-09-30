@@ -577,7 +577,7 @@ class Room():
 def index():
     #eprint(f"RICHIESTA", request.args.get('redirected'))
     #eprint(f"LOCAL ADDR", request.remote_addr)
-    username = request.cookies.get('username')
+    username = request.cookies.get('username')  
     if(request.args.get('redirected')):
         if(not username):
             return render_template('login.html', SOCKET_PORT=sys.argv[1], cookies=username)
@@ -867,7 +867,7 @@ def handle_message(message):
     elif mex["type"] == "GAME_MOVE":
         res = {"type": "GAMEMOVE", "roomId": mex["roomId"], "bet": mex["bet"], "placedBet": mex["placedBet"], "bet2": mex["bet2"], "placedBet2": mex["placedBet2"], "startId": request.sid}
     else:
-        res = { "type": "RESPONSE", "message": mex["message"], "id": mex["id"] }
+        res = { "type": "RESPONSE", "message": mex["message"], "id": mex["id"], "avatar": mex["avatar"] }
 
     #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
 
