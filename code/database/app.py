@@ -4,7 +4,6 @@ import sys
 import json
 import re
 import sqlite3
-import base64
 
 app = Flask(__name__)
 
@@ -29,7 +28,7 @@ def register():
     try:
         username = request.form.get("username")
         password = request.form.get("password")
-        avatar_base64_image = request.form.get("base64Image")
+        avatarId = request.form.get("avatarId")
         confirm_password = password
 
         # Check if passwords match
@@ -45,7 +44,7 @@ def register():
         VALUES (?, ?, ?)
         """
 
-        cursor.execute(insert_query, (username, password, avatar_base64_image))
+        cursor.execute(insert_query, (username, password, avatarId))
         conn.commit()
         conn.close()
 
@@ -76,7 +75,7 @@ def login():
             username = provided_username
             resp = make_response(redirect('http://localhost:3005/'))
             resp.set_cookie('username', username)
-            # resp.set_cookie('avatar', user[3])
+            resp.set_cookie('avatar', user[3])
             return resp
         else:
             response = {

@@ -160,8 +160,8 @@
 
           var hiddenInput = document.createElement("input");
           hiddenInput.type = "hidden";
-          hiddenInput.name = "base64Image";
-          hiddenInput.id = "base64Image";
+          hiddenInput.name = "avatarId";
+          hiddenInput.id = "avatarId";
           hiddenInput.value = avatarId;
           registrationForm.appendChild(hiddenInput);
           registrationForm.submit();
@@ -170,7 +170,8 @@
 
       function setAvatarId() {
         event.preventDefault;
-        avatarId = event.target.id;
+        const numericAvatarId = parseInt(event.target.id.match(/\d+/)[0], 10);
+        avatarId = numericAvatarId;
       }
     </script>
   </body>
