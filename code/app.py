@@ -1,8 +1,6 @@
-#import grequests
 import requests
-import os
 from requests_futures.sessions import FuturesSession
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 
 import json
@@ -132,13 +130,9 @@ class PerfectFailureDetector():
 
         self.p2p.send(process,{"header":["PFD"],"type": "HEARTBEAT_REPLY", "serverSender": MY_ADDRESS})
 
-
     def receiveHBReply(self,process):
 
-        #eprint(f"HBR{process}")
         self.alive.add(process)
-        #eprint(f"HBR{self.alive}")
-
 
     def emitCrash(self,process):
 
@@ -458,19 +452,38 @@ class Room():
         sleep(6)
 
         eprint(total)
+        
+        multipliers = [2,2,18,9,6,5,4,3,4,5,6,9,18]
 
         for player in self.bets:
+            
+            if not self.bets[player]:
+                break
+            
             if total%2 == 0:
                 if self.bets[player] == "EVEN":
-                    self.points[self.socketsToUsers[player]] += 2 * int(self.placedBet[player])
+                    self.points[self.socketsToUsers[player]] += multipliers[0] * int(self.placedBet[player])
                 else:
                     self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
             else:
                 if self.bets[player] == "ODD":
-                    self.points[self.socketsToUsers[player]] += 2 * int(self.placedBet[player])
+                    self.points[self.socketsToUsers[player]] += multipliers[1] * int(self.placedBet[player])
                 else:
                     self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                    
         for player in self.bets2:
+            
+            if not self.bets2[player]:
+                break
+            
+            finalBetValue = int(self.bets2[player])
+    
+            if total == finalBetValue:
+                self.points[self.socketsToUsers[player]] += multipliers[finalBetValue] * int(self.placedBet2[player])
+            else:
+                self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+            
+            '''
             if total==2:
                 if self.bets2[player] == "TWO":
                     self.points[self.socketsToUsers[player]] += 18 * int(self.placedBet2[player])
@@ -526,6 +539,7 @@ class Room():
                     self.points[self.socketsToUsers[player]] += 18 * int(self.placedBet2[player])
                 else:
                     self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
+            '''
 
         for sockets in self.players:
             res = {"type" : "ENDTURN", "points": self.points, "total": total}
@@ -575,8 +589,7 @@ class Room():
 
 @app.route('/')
 def index():
-    #eprint(f"RICHIESTA", request.args.get('redirected'))
-    #eprint(f"LOCAL ADDR", request.remote_addr)
+    
     username = request.cookies.get('username')  
     if(request.args.get('redirected')):
         if(not username):
@@ -594,10 +607,10 @@ def deliver_message():
     global messageID
     global openRooms
     global dice
+    
     # Get the JSON message from the request body
     res = request.get_json()
     serverSender = res["serverSender"]
-    #eprint(f"MESSAGE: {res}")
 
     head = ""
 
@@ -609,8 +622,6 @@ def deliver_message():
         return "not delivered"
 
     if head == "P2PLink":
-
-        #eprint(f"[{MY_ADDRESS}] P2P Link Delivery")
 
         requests.post(f'http://{MY_ADDRESS}/api/deliver', json=res)
 
@@ -638,18 +649,14 @@ def deliver_message():
         if res["type"] == "RNG":
             rb.deliver(res)
 
-        #eprint(f"[{MY_ADDRESS}] BEB Delivery")
         return "received"
 
     if head == "PFD":
 
-        #requests.post(f'http://{MY_ADDRESS}/api/deliver', json=res)
-        #response = json.dumps(res)
-
         if res["type"] == "HEARTBEAT_REQUEST":
 
             pfd.sendHBReply(serverSender)
-            #eprint(f"[{MY_ADDRESS}] PFD Heartbeat Request Delivery from {serverSender}")
+            
             return "received"
 
         if res["type"] == "HEARTBEAT_REPLY":
@@ -657,7 +664,6 @@ def deliver_message():
             with pfd.aliveLock:
                 pfd.receiveHBReply(serverSender)
 
-            #eprint(f"[{MY_ADDRESS}] PFD Heartbeat Reply Delivery from {serverSender}")
             return "received"
 
     if head == "RBroadcast":
@@ -880,15 +886,9 @@ def handle_message(message):
         res["messageID"] = messageID
         messageID += 1
 
-        #eprint(f"MSG: {res}")
-
-        # TEST CONSENSUS
-        #consensus.propose_value(json.dumps(random.randint(0,100)))
-        #consensus.propose_value(json.dumps([random.randint(0,100) for i in range(3)]))
     eprint(res)
     rb.broadcast(res)
 
-        #p2p.send(LINKS[0],res)
 
 
 @socketio.on('disconnect')
@@ -903,7 +903,7 @@ def handle_disconnect():
     response = json.dumps(res)
     socketio.emit('message', response)
 
-        ## send message outside
+    ## send message outside
 
     res["header"] = []
     res["serverSender"] = MY_ADDRESS
@@ -911,8 +911,6 @@ def handle_disconnect():
     with idLock:
         res["messageID"] = messageID
         messageID += 1
-
-        #eprint(f"MSG: {res}")
 
     rb.broadcast(res)
 
@@ -922,10 +920,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
 
         socketio.run(app, host='0.0.0.0', port=sys.argv[1], allow_unsafe_werkzeug=True)
-        
-        
-        
-        
+                  
     else:
 
         raise Exception("Wrong number of arguments provided!")
