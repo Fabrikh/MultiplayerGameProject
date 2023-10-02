@@ -7,6 +7,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/server0/Dockerfile
+
     depends_on:
       - loadbalancer
       - rng
@@ -21,6 +22,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/server1/Dockerfile
+  
     depends_on:
       - loadbalancer
       - rng
@@ -34,6 +36,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/server2/Dockerfile
+
     depends_on:
       - loadbalancer
       - rng

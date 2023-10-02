@@ -4,6 +4,10 @@ body {
   background-size: 200px 200px;
 }
 
+.navbar-custom {
+  background-color: #202221;
+}
+
 .connect-message {
   font-weight: bold;
 }
@@ -74,6 +78,8 @@ body {
   border-color: rgb(45, 45, 45);
   border-width: 10;
   border-style: solid;
+  width:50%;
+  margin-top:20px
 }
 
 #diceVideo {
@@ -120,15 +126,23 @@ body {
   padding: 1rem;
   transition: all 0.3s ease;
 }
+
+.cellcontainerScore {
+  display: grid;
+  margin: 10px 0px;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 0fr 0fr;
+  grid-gap: 1px 1px;
+}
+
 .cell-scoreboard {
   color: white;
   font-size: 1rem;
   text-align: center;
   padding: 1rem;
   transition: all 0.3s ease;
-}
-.player {
-  background: blue;
+  background-color: #202221;
+  border-top: 4px solid #078612;
 }
 
 .cell:hover {
@@ -200,8 +214,7 @@ body {
 #bet,
 #search {
   width: 100%;
-  margin-top: 40px;
-  margin-bottom: 40px;
+  margin: 40px 0px;
   background-color: #4caf50;
   border: none;
   color: white;
@@ -213,14 +226,13 @@ body {
 }
 #leave {
   width: 100%;
-  margin-top: 40px;
-  margin-bottom: 40px;
+  margin: 40px 0px;
   background-color: #ff0000;
   border: none;
   color: white;
   padding: 15px 32px;
   text-align: center;
   text-decoration: none;
-  display: inline-block;
+  display: none;
   font-size: 16px;
 }

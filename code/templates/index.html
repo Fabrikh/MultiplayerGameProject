@@ -303,8 +303,8 @@
       function searchRoom() {
         var myButtonSearch = (document.getElementById(
           "search"
-        ).disabled = true);
-        var myButtonLeave = (document.getElementById("leave").disabled = false);
+        ).style.display = "none");
+        var myButtonLeave = (document.getElementById("leave").style.display = "inline-block");
 
         socket.emit(
           "message",
@@ -315,8 +315,8 @@
       function leaveRoom() {
         var myButtonSearch = (document.getElementById(
           "search"
-        ).disabled = false);
-        var myButtonLeave = (document.getElementById("leave").disabled = true);
+        ).style.display = "inline-block");
+        var myButtonLeave = (document.getElementById("leave").style.display = "none");
 
         socket.emit(
           "message",
@@ -359,12 +359,12 @@
     </script>
   </head>
   <body onload="start_ws()">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-custom">
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="nav navbar-nav ml-auto">
           <li class="nav-item">
             <button
-              class="btn btn-outline-danger my-2 my-sm-0"
+              class="btn btn-danger my-2 my-sm-0"
               type="submit"
               onclick="logout()"
             >
@@ -377,7 +377,7 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-6">
-          <div class="embed-responsive embed-responsive-16by9 my-5">
+          <div class="embed-responsive embed-responsive-16by9 my-5 mx-auto">
             <div class="row" id="video_div">
               <video
                 class="embed-responsive-item"
@@ -614,29 +614,33 @@
           </div>
           <br />
           <button id="bet" onclick="bet()">BET!</button>
+          
+          <!--
           <h2 id="recap" style="color: white"></h2>
           <h2 id="recap2" style="color: white"></h2>
           <h2 id="winner" style="color: white"></h2>
+            -->
+
         </div>
-        <div class="col-md-6 px-5 my-auto">
+        <div class="col-md-6 px-5">
           <button id="search" onclick="searchRoom()">
             Search a game room!
           </button>
-          <button id="leave" onclick="leaveRoom()" disabled>
+          <button id="leave" onclick="leaveRoom()">
             Leave the game room!
           </button>
-          <div class="cellcontainer">
-            <div class="cell-scoreboard player">
+          <div class="cellcontainerScore">
+            <div class="cell-scoreboard">
               <div id="player1NameDiv" style="color: white">Player1</div>
               <hr width="80%" color="white" />
               <div id="player1ScoreDiv" style="color: white">100</div>
             </div>
-            <div class="cell-scoreboard player">
+            <div class="cell-scoreboard">
               <div id="player2NameDiv" style="color: white">Player2</div>
               <hr width="80%" color="white" />
               <div id="player2ScoreDiv" style="color: white">100</div>
             </div>
-            <div class="cell-scoreboard player">
+            <div class="cell-scoreboard">
               <div id="player3NameDiv" style="color: white">Player3</div>
               <hr width="80%" color="white" />
               <div id="player3ScoreDiv" style="color: white">100</div>
