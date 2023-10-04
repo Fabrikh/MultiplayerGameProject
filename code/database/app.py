@@ -13,16 +13,6 @@ app.secret_key = "app secret key"
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-
-@app.route("/register", methods=["GET"])
-def register_page():
-    try:
-        return render_template("registration.html")
-    except Exception as e:
-        response = {"error": str(e)}
-        return jsonify(response), 400  # HTTP 400 Bad Request status code
-
-
 @app.route("/register", methods=["POST"])
 def register():
     try:
@@ -88,25 +78,6 @@ def login():
         response = {"error": str(e)}
         return jsonify(response), 400  # HTTP 400 Bad Request status code
 
-
-@app.route("/login", methods=["GET"])
-def login_page():
-    try:
-        return render_template("login.html")
-    except Exception as e:
-        response = {"error": str(e)}
-        return jsonify(response), 400  # HTTP 400 Bad Request status code
-
-
-@app.route("/", methods=["GET"])
-def default():
-    try:
-        return redirect(url_for("login"))
-    except Exception as e:
-        response = {"error": str(e)}
-        return jsonify(response), 400  # HTTP 400 Bad Request status code
-
-
 @app.route("/users", methods=["GET"])
 def get_all_users():
     conn = sqlite3.connect("userDB.db")
@@ -121,21 +92,26 @@ def get_all_users():
     return jsonify(users)
 
 
-@app.route("/dashboard")
+@app.route("/dashboard", methods=["GET"])
 def user_dashboard():
-    username = request.args.get("username")
+    username = request.cookies.get('username')  
 
     conn = sqlite3.connect("userDB.db")
     cursor = conn.cursor()
 
     query = "SELECT * FROM users WHERE username = ?"
     cursor.execute(query, (username,))
-    avatar = cursor.fetchone()
+    user = cursor.fetchone()
 
     conn.close()
 
-    if (username == request.cookies.get('username')):
-        return render_template("dashboard.html", username=username, avatar=avatar[3])
+    if (user):
+        username = username
+        resp = make_response(redirect('http://localhost:3000/dashboard'))
+        resp.set_cookie('username', username)
+        resp.set_cookie('avatar', user[3])
+        return resp
+        
     else:
         return "You must be logged in to access the dashboard"
 

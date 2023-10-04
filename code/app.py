@@ -593,15 +593,23 @@ def index():
     username = request.cookies.get('username')  
     if(request.args.get('redirected')):
         if(not username):
-            return render_template('login.html', SOCKET_PORT=sys.argv[1], cookies=username)
+            return render_template('login.html', SOCKET_PORT=sys.argv[1])
         else:
             return render_template('index.html', SOCKET_PORT=sys.argv[1], cookies=username)
 
 @app.route('/register')
 def register():
    return render_template('register.html')
-    
 
+@app.route('/dashboard')
+def dashboard():
+    username = request.cookies.get('username')  
+    avatar = request.cookies.get('avatar')  
+    if(username and avatar):
+        return render_template("dashboard.html", username=username, avatar=avatar)
+    else:
+        return render_template('login.html', SOCKET_PORT=sys.argv[1])
+    
 @app.route('/api/deliver', methods=['POST'])
 def deliver_message():
     global messageID
