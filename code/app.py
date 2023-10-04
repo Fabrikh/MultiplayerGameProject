@@ -591,9 +591,10 @@ class Room():
 def index():
     
     username = request.cookies.get('username')  
+    error = request.cookies.get('error')
     if(request.args.get('redirected')):
         if(not username):
-            return render_template('login.html', SOCKET_PORT=sys.argv[1])
+            return render_template('login.html', SOCKET_PORT=sys.argv[1], error=error)
         else:
             return render_template('index.html', SOCKET_PORT=sys.argv[1], cookies=username)
 

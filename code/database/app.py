@@ -39,6 +39,7 @@ def register():
         conn.close()
 
         resp = make_response(redirect('http://localhost:3005/'))
+        resp.set_cookie('error', "False")
         return resp
     
     except Exception as e:
@@ -66,13 +67,12 @@ def login():
             resp = make_response(redirect('http://localhost:3005/'))
             resp.set_cookie('username', username)
             resp.set_cookie('avatar', user[3])
+            resp.set_cookie('error', "False")
             return resp
         else:
-            response = {
-                "success": False,
-                "message": "Login failed",
-            }
-            return jsonify(response)
+            resp = make_response(redirect('http://localhost:3005/'))
+            resp.set_cookie('error', "True")
+            return resp
 
     except Exception as e:
         response = {"error": str(e)}
