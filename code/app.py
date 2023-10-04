@@ -591,7 +591,7 @@ class Room():
 def index():
     
     username = request.cookies.get('username')  
-    error = request.cookies.get('error')
+    error = request.cookies.get('error_wrong_credentials')
     if(request.args.get('redirected')):
         if(not username):
             return render_template('login.html', SOCKET_PORT=sys.argv[1], error=error)
@@ -600,7 +600,8 @@ def index():
 
 @app.route('/register')
 def register():
-   return render_template('register.html')
+    error = request.cookies.get('error_already_registered')
+    return render_template('register.html', error=error)
 
 @app.route('/dashboard')
 def dashboard():

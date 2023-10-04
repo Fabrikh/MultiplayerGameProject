@@ -28,6 +28,16 @@ def register():
         conn = sqlite3.connect("userDB.db")
         cursor = conn.cursor()
 
+        query = "SELECT * FROM users WHERE username = ?"
+        cursor.execute(query, (username,))
+        user = cursor.fetchone()
+
+        if (user):
+            resp = make_response(redirect('http://localhost:3000/register'))
+            resp.set_cookie('error_already_registered', "True")
+            return resp
+
+
         # prettier-ignore
         insert_query = """
         INSERT INTO users (username, password, avatar)
@@ -39,7 +49,8 @@ def register():
         conn.close()
 
         resp = make_response(redirect('http://localhost:3005/'))
-        resp.set_cookie('error', "False")
+        resp.set_cookie('error_wrong_credentials', "False")
+        resp.set_cookie('error_already_registered', "False")
         return resp
     
     except Exception as e:
@@ -67,11 +78,11 @@ def login():
             resp = make_response(redirect('http://localhost:3005/'))
             resp.set_cookie('username', username)
             resp.set_cookie('avatar', user[3])
-            resp.set_cookie('error', "False")
+            resp.set_cookie('error_wrong_credentials', "False")
             return resp
         else:
             resp = make_response(redirect('http://localhost:3005/'))
-            resp.set_cookie('error', "True")
+            resp.set_cookie('error_wrong_credentials', "True")
             return resp
 
     except Exception as e:
