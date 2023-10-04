@@ -34,6 +34,7 @@
       function logout(){
         deleteCookie('username');
         deleteCookie('avatar');
+        leaveRoom();
         window.location.href = 'http://localhost:3005';
       }
 
