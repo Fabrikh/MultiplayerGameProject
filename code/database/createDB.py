@@ -15,5 +15,15 @@ CREATE TABLE users (
 
 cur.execute(create_table_query)
 
+insert_query = """
+INSERT INTO users (username, password, avatar)
+    VALUES (?, ?, ?)
+    """
+
+cur.execute(insert_query, ("user01", "user01", "1"))
+cur.execute(insert_query, ("user02", "user02", "2"))
+cur.execute(insert_query, ("user03", "user03", "3"))
+
+
 conn.commit()
 conn.close()
