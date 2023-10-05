@@ -88,6 +88,33 @@ def login():
     except Exception as e:
         response = {"error": str(e)}
         return jsonify(response), 400  # HTTP 400 Bad Request status code
+    
+@app.route("/endgame", methods=["POST"])
+def endgame():
+    try:
+        conn = sqlite3.connect("userDB.db")
+        cursor = conn.cursor()
+
+        # username = request.cookies.get('username') 
+        username = "user01" 
+        scoreQuery = "SELECT * FROM scores WHERE username = ?"
+        cursor.execute(scoreQuery, (username,))
+        score = cursor.fetchone()
+       
+        if(score): 
+            insert_query = """
+            INSERT INTO scores (highscore, playedGames, username)
+            VALUES (?, ?, ?)
+            """
+            cursor.execute(insert_query, ("100", "100" , username))
+          
+        conn.commit()
+        conn.close()
+        return 200
+
+    except Exception as e:
+        response = {"error": str(e)}
+        return jsonify(response), 400  # HTTP 400 Bad Request status code
 
 @app.route("/users", methods=["GET"])
 def get_all_users():
@@ -110,9 +137,15 @@ def user_dashboard():
     conn = sqlite3.connect("userDB.db")
     cursor = conn.cursor()
 
-    query = "SELECT * FROM users WHERE username = ?"
-    cursor.execute(query, (username,))
+    userQuery = "SELECT * FROM users WHERE username = ?"
+    cursor.execute(userQuery, (username,))
     user = cursor.fetchone()
+
+    scoreQuery = "SELECT * FROM scores WHERE username = ?"
+    cursor.execute(scoreQuery, (username,))
+    score = cursor.fetchone()
+    highscore_value = score[0] if score else '0'
+    played_games_value = score[1] if score else '0'
 
     conn.close()
 
@@ -121,6 +154,8 @@ def user_dashboard():
         resp = make_response(redirect('http://localhost:3000/dashboard'))
         resp.set_cookie('username', username)
         resp.set_cookie('avatar', user[3])
+        resp.set_cookie('highscore', highscore_value)
+        resp.set_cookie('played_games', played_games_value)
         return resp
         
     else:

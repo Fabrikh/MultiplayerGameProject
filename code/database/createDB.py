@@ -15,6 +15,17 @@ CREATE TABLE users (
 
 cur.execute(create_table_query)
 
+create_scores_table_query = """
+CREATE TABLE scores (
+    id INTEGER PRIMARY KEY,
+    highscore INTEGER,
+    playedGames INTEGER,
+    username TEXT,
+    FOREIGN KEY (username) REFERENCES users (username)
+);
+"""
+cur.execute(create_scores_table_query)
+
 insert_query = """
 INSERT INTO users (username, password, avatar)
     VALUES (?, ?, ?)

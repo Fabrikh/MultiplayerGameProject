@@ -31,17 +31,17 @@
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       }
 
-      function logout(){
-        deleteCookie('username');
-        deleteCookie('avatar');
+      function logout() {
+        deleteCookie("username");
+        deleteCookie("avatar");
         leaveRoom();
-        window.location.href = 'http://localhost:3005';
+        window.location.href = "http://localhost:3005";
       }
 
       function writeOnChat(text, writer, avatar = 1) {
         let chat = document.querySelector("#chatCard > .card-body");
         let autoScroll = writer === myId || chat.scrollTop == chat.scrollTopMax;
-        let icon = (writer != "System" ? avatar : "systemIcon")
+        let icon = writer != "System" ? avatar : "systemIcon";
 
         chat.insertAdjacentHTML(
           "beforeend",
@@ -78,7 +78,6 @@
         );
 
         if (autoScroll) chat.scrollTop = chat.scrollTopMax;
-
       }
 
       function updateScoreDisplay(scores) {
@@ -110,7 +109,7 @@
         console.log("ID: ", myId);
         console.log("avatar", avatar);
 
-        socket = io.connect('http://localhost:'+{{SOCKET_PORT}}+'/');
+        socket = io.connect("http://localhost:" + {{SOCKET_PORT}}+'/');
 
         // WebSocket connection event
         socket.on("connect", function () {
@@ -202,6 +201,7 @@
               ////document.getElementById("chat").innerHTML += `<div> ${mex.points}</div>`;
               //writeOnChat("A")
             } else if (mex.type == "ENDGAME") {
+              saveScore();
               let max = 0;
               let winner;
               for (let key in mex.points) {
@@ -243,6 +243,32 @@
         });
       }
 
+      function saveScore() {
+        console.log("SAVING SCORE...")
+        const url = "http://localhost:4000/endgame";
+        const data = { score: 100 };
+        const headers = {
+          "Content-Type": "application/json",
+        };
+
+        fetch(url, {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify(data),
+        }).then((response) => {
+          if (response.status === 201) {
+            console.log("Score added successfully.");
+          } else if (response.status === 404) {
+            console.log("User not found.");
+          } else {
+            console.error("Error:", response.status);
+            response.json().then((errorData) => {
+              console.error(errorData); // Print any error messages returned by the API
+            });
+          }
+        });
+      }
+
       function send_message(event) {
         let textarea;
         let target = event.target;
@@ -276,7 +302,6 @@
         }
       }
 
-
       function cleanInput(text) {
         return text.trim();
       }
@@ -302,10 +327,10 @@
       }
 
       function searchRoom() {
-        var myButtonSearch = (document.getElementById(
-          "search"
-        ).style.display = "none");
-        var myButtonLeave = (document.getElementById("leave").style.display = "inline-block");
+        var myButtonSearch = (document.getElementById("search").style.display =
+          "none");
+        var myButtonLeave = (document.getElementById("leave").style.display =
+          "inline-block");
 
         socket.emit(
           "message",
@@ -314,10 +339,10 @@
       }
 
       function leaveRoom() {
-        var myButtonSearch = (document.getElementById(
-          "search"
-        ).style.display = "inline-block");
-        var myButtonLeave = (document.getElementById("leave").style.display = "none");
+        var myButtonSearch = (document.getElementById("search").style.display =
+          "inline-block");
+        var myButtonLeave = (document.getElementById("leave").style.display =
+          "none");
 
         socket.emit(
           "message",
