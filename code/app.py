@@ -548,7 +548,7 @@ class Room():
         self.bets = {}
         self.bets2 = {}
 
-        if self.turn < 5:
+        if self.turn < 1:
             self.timer = Timer(20.0, self.endTurn)
             self.timer.start()
         else:
