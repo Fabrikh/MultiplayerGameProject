@@ -157,14 +157,14 @@
             socket.emit("message", conn);
           } else {
             if (mex.type == "ROOM") {
-              //document.getElementById("chat").innerHTML += `<div> User ${mex.user} entered your room (ID: ${mex.roomId})</div>`;
+              
               writeOnChat(
                 `User ${mex.user} entered your room (ID: ${mex.roomId})`,
                 "System"
               );
               roomId = mex.roomId;
             } else if (mex.type == "ENTER_ROOM") {
-              //document.getElementById("chat").innerHTML += `<div> You are now in the room (ID: ${mex.roomId})</div>`;
+
               writeOnChat(
                 `You are now in the room (ID: ${mex.roomId})`,
                 "System"
@@ -175,11 +175,12 @@
                 "System"
               );
             } else if (mex.type == "START") {
-              //document.getElementById("chat").innerHTML += `<div> STARTING THE GAME</div>`;
+
               writeOnChat(`STARTING THE GAME`, "System");
               updateScoreDisplay(mex.points);
+
             } else if (mex.type == "ENDTURN") {
-              //document.getElementById("chat").innerHTML += `<div> THE DRAWN NUMBER IS: ${mex.total}! </div>`;
+
               writeOnChat(`THE DRAWN NUMBER IS: ${mex.total}!`, "System");
               document
                 .getElementById("myRange")
@@ -189,18 +190,19 @@
                 .setAttribute("max", mex.points[myId]);
               for (let key in mex.points) {
                 if (mex.points.hasOwnProperty(key)) {
+
                   let value = mex.points[key];
-                  //document.getElementById("chat").innerHTML += `<div> Player: ${key} has now: ${value} points!</div>`;
                   writeOnChat(
                     `Player: ${key} has now: ${value} points!`,
                     "System"
+
                   );
                 }
               }
               updateScoreDisplay(mex.points);
-              ////document.getElementById("chat").innerHTML += `<div> ${mex.points}</div>`;
-              //writeOnChat("A")
+  
             } else if (mex.type == "ENDGAME") {
+
               saveScore();
               let max = 0;
               let winner;
@@ -224,15 +226,17 @@
               let dice1 = mex.dice1;
               let dice2 = mex.dice2;
               fileName = `${dice1}-${dice2}`;
-              startAnimation(fileName); // Non carica il video rippissimo
+              startAnimation(fileName);
             } else {
               if (mex.id == "all") {
-                //document.getElementById("chat").innerHTML += `<div class="connect-message">${mex.message}</div>`;
+
                 writeOnChat(`${mex.message}`, "System");
+
               } else {
-                //document.getElementById("chat").innerHTML += `<div>${mex.id}: ${mex.message}</div>`;
+
                 writeOnChat(`${mex.message}`, mex.id, mex.avatar);
                 console.log("Avatar: ", mex);
+                
               }
             }
           }

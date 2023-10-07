@@ -391,6 +391,7 @@ class Room():
         eprint(self.players)
 
     def removePlayer(self, playerId):
+        
         self.players.discard(playerId[0])
         self.socketsToUsers.pop(playerId[0], None)
         self.points.pop(playerId[1], None)
@@ -421,6 +422,7 @@ class Room():
 
         ### RNG ###
         global dice
+        multipliers = [2,2,18,9,6,5,4,3,4,5,6,9,18]
 
         if MY_ADDRESS in self.roomId:
             result = rng.random_dice((MY_ADDRESS, self.roomId))
@@ -453,7 +455,7 @@ class Room():
 
         eprint(total)
         
-        multipliers = [2,2,18,9,6,5,4,3,4,5,6,9,18]
+        
 
         for player in self.bets:
             
@@ -483,63 +485,6 @@ class Room():
             else:
                 self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
             
-            '''
-            if total==2:
-                if self.bets2[player] == "TWO":
-                    self.points[self.socketsToUsers[player]] += 18 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==3:
-                if self.bets2[player] == "THREE":
-                    self.points[self.socketsToUsers[player]] += 9 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==4:
-                if self.bets2[player] == "FOUR":
-                    self.points[self.socketsToUsers[player]] += 6 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==5:
-                if self.bets2[player] == "FIVE":
-                    self.points[self.socketsToUsers[player]] += 5 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==6:
-                if self.bets2[player] == "SIX":
-                    self.points[self.socketsToUsers[player]] += 4 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==7:
-                if self.bets2[player] == "SEVEN":
-                    self.points[self.socketsToUsers[player]] += 3 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==8:
-                if self.bets2[player] == "EIGHT":
-                    self.points[self.socketsToUsers[player]] += 4 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==9:
-                if self.bets2[player] == "NINE":
-                    self.points[self.socketsToUsers[player]] += 5 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==10:
-                if self.bets2[player] == "TEN":
-                    self.points[self.socketsToUsers[player]] += 6 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==11:
-                if self.bets2[player] == "ELEVEN":
-                    self.points[self.socketsToUsers[player]] += 9 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            elif total==12:
-                if self.bets2[player] == "TWELVE":
-                    self.points[self.socketsToUsers[player]] += 18 * int(self.placedBet2[player])
-                else:
-                    self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
-            '''
 
         for sockets in self.players:
             res = {"type" : "ENDTURN", "points": self.points, "total": total}
@@ -715,17 +660,17 @@ def deliver_message():
         else:
             response = json.dumps(res)
             socketio.emit('message', response, namespace = '/')
-        #print("Delivered message by: ", res["id"])
 
-        #eprint(f"[{MY_ADDRESS}] RB Delivery")
+
         return "received"
 
 
 @app.route('/api/crash', methods=['POST'])
 def crash_message():
+    
     # Get the JSON message from the request body
     res = request.get_json()
-    #eprint(f"CRASH_MESSAGE: {res}")
+    
 
     if res["type"] == "CRASH":
 
@@ -743,9 +688,9 @@ def crash_message():
     
 @app.route('/api/recover', methods=['POST'])
 def recover_message():
+    
     # Get the JSON message from the request body
     res = request.get_json()
-    #eprint(f"CRASH_MESSAGE: {res}")
 
     if res["type"] == "RECOVER":
 
@@ -769,7 +714,6 @@ def decision_message():
     global messageID
     # Get the JSON message from the request body
     res = request.get_json()
-    #eprint(f"CRASH_MESSAGE: {res}")
 
     if res["type"] == "DECISION":
 
@@ -788,7 +732,6 @@ def decision_message():
                 if(res["starter"] and res["starter"] == MY_ADDRESS):
                     connected_clients[res["socket"]] = res["proposedId"]
                 res = { "type": "RESPONSE", "message": "User " + res["proposedId"] + " connected to the chat!", "id": "all" }
-                #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
 
                 response = json.dumps(res)
                 res["header"] = []
@@ -865,9 +808,6 @@ def handle_message(message):
         else:
             res = { "type": "STARTPROPOSAL", "id": mex["id"], "socket": client_id, "starter": MY_ADDRESS}
 
-            #connected_clients[client_id] = mex["id"]
-            #res = { "type": "RESPONSE", "message": "User " + mex["id"] + " connected to the chat!", "id": "all" }
-
     elif mex["type"] == "SEARCHGAME":
         if not openRooms:
             res = create_room(request.sid, mex["id"])
@@ -885,9 +825,8 @@ def handle_message(message):
     else:
         res = { "type": "RESPONSE", "message": mex["message"], "id": mex["id"], "avatar": mex["avatar"] }
 
-    #print("Received message:" + mex["message"] + " by ID: " + mex["id"])
 
-        ## send message outside
+    ## send message outside
 
     res["header"] = []
     res["serverSender"] = MY_ADDRESS
