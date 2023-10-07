@@ -30,6 +30,7 @@ messageID = 0
 idLock = Lock()
 LOADBALANCER = ""
 RNG = ""
+MAX_TURN = 3
 
 lastDecision = None
 decisionID = 0
@@ -455,8 +456,6 @@ class Room():
 
         eprint(total)
         
-        
-
         for player in self.bets:
             
             if not self.bets[player]:
@@ -493,7 +492,7 @@ class Room():
         self.bets = {}
         self.bets2 = {}
 
-        if self.turn < 1:
+        if self.turn < MAX_TURN:
             self.timer = Timer(20.0, self.endTurn)
             self.timer.start()
         else:

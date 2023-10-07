@@ -4,6 +4,8 @@ body {
   background-size: 200px 200px;
 }
 
+
+
 .navbar-custom {
   background-color: #202221;
 }
@@ -224,6 +226,13 @@ body {
   display: inline-block;
   font-size: 16px;
 }
+
+#bet:disabled,#bet[disabled]{
+  border: 1px solid #646464;
+  background-color: #5e5e5e;
+  color: #a4a4a4;
+}
+
 #leave {
   width: 100%;
   margin: 40px 0px;

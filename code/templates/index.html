@@ -92,6 +92,15 @@
           div2.innerHTML = `${player}`;
           i++;
         }
+
+        while (i <= 3) {
+          div = document.querySelector(`#player${i}ScoreDiv`);
+          div.innerHTML = ``;
+          div2 = document.querySelector(`#player${i}NameDiv`);
+          div2.innerHTML = ``;
+          i++
+        }
+
       }
 
       function getCookie(cookieName) {
@@ -157,7 +166,7 @@
             socket.emit("message", conn);
           } else {
             if (mex.type == "ROOM") {
-              
+
               writeOnChat(
                 `User ${mex.user} entered your room (ID: ${mex.roomId})`,
                 "System"
@@ -354,7 +363,7 @@
         );
       }
 
-      function bet() {
+      function bet(element) {
         var slider = document.getElementById("myRange");
         var slider2 = document.getElementById("myRange2");
         placedBet = slider.value;
@@ -375,17 +384,20 @@
           "YOU BET " + placedBet + " OVER " + betValue + "!";
         document.getElementById("recap2").textContent =
           "YOU BET " + placedBet2 + " OVER " + betValue2 + "!";
+
+        element.disabled = true;
+      
       }
 
       function setValue(value) {
         betValue = value;
+        document.querySelector("#bet").disabled = false; 
       }
 
       function setValue2(element) {
         betValue2 = element.id.substr(8);
-        console.log(betValue2);
+        document.querySelector("#bet").disabled = false; 
       }
-      //darkgreen #5ac53a
     </script>
   </head>
   <body onload="start_ws()">
@@ -477,7 +489,7 @@
               <div class="rangediv">
                 <span class="rangevalue" id="rangeValue">0</span>
                 <input class="range" type="range" name "" value="0" min="0"
-                max="100" onChange="rangeSlide(this.value)"
+                max="100" onChange="rangeSlide(this.value);document.querySelector('#bet').disabled = false;"
                 onmousemove="rangeSlide(this.value)" id="myRange"/>
               </div>
               <script type="text/javascript">
@@ -641,7 +653,7 @@
               <div class="rangediv">
                 <span class="rangevalue" id="rangeValue2">0</span>
                 <Input class="range" type="range" name "" value="0" min="0"
-                max="100" onChange="rangeSlide2(this.value)"
+                max="100" onChange="rangeSlide2(this.value);document.querySelector('#bet').disabled = false;"
                 onmousemove="rangeSlide2(this.value)" id="myRange2"/>
               </div>
               <script type="text/javascript">
@@ -652,12 +664,12 @@
             </div>
           </div>
           <br />
-          <button id="bet" onclick="bet()">BET!</button>
+          <button id="bet" onclick="bet(this)">BET!</button>
 
-          <!--
-          <h2 id="recap" style="color: white"></h2>
-          <h2 id="recap2" style="color: white"></h2>
-          -->
+          
+          <h2 id="recap" style="color: white" hidden></h2>
+          <h2 id="recap2" style="color: white" hidden></h2>
+          
           <h2 id="winner" style="color: white" hidden></h2>
         </div>
         <div class="col-md-6 px-5">
