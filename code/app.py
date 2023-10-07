@@ -484,6 +484,7 @@ class Room():
             else:
                 self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
             
+        eprint("####",self.points)
 
         for sockets in self.players:
             res = {"type" : "ENDTURN", "points": self.points, "total": total}
@@ -623,6 +624,8 @@ def deliver_message():
     if head == "RBroadcast":
 
         if res["type"] == "NEWROOM" or res["type"] == "ADDTOROOM":  #Either way, the set default generates a room if there isn't one with that id or just adds a value if not
+
+            eprint("##",res)
 
             if res["roomId"] not in openRooms:
                 openRooms[res["roomId"]] = Room(res["roomId"], res["startId"])

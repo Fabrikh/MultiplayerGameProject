@@ -86,10 +86,13 @@
           i = 1;
 
         for (player in scores) {
+          playerUser = player.split("#AT#")[0]
           div = document.querySelector(`#player${i}ScoreDiv`);
           div.innerHTML = `${scores[player]}`;
           div2 = document.querySelector(`#player${i}NameDiv`);
-          div2.innerHTML = `${player}`;
+          div2.children[1].innerHTML = `${playerUser}`;
+          imgAvatar = document.querySelector(`#player${i}NameDiv > img`);
+          imgAvatar.src = `./static/assets/playerIcons/${i}.png`;
           i++;
         }
 
@@ -97,7 +100,8 @@
           div = document.querySelector(`#player${i}ScoreDiv`);
           div.innerHTML = ``;
           div2 = document.querySelector(`#player${i}NameDiv`);
-          div2.innerHTML = ``;
+          div2.children[1].innerHTML = ``;
+          document.querySelector(`#player${i}NameDiv > img`).src = `./static/assets/playerIcons/user.png`;
           i++
         }
 
@@ -168,7 +172,7 @@
             if (mex.type == "ROOM") {
 
               writeOnChat(
-                `User ${mex.user} entered your room (ID: ${mex.roomId})`,
+                `User ${mex.user.split("#AT#")[0]} entered your room (ID: ${mex.roomId})`,
                 "System"
               );
               roomId = mex.roomId;
@@ -180,7 +184,7 @@
               );
             } else if (mex.type == "LEFTROOM") {
               writeOnChat(
-                `User ${mex.user} left the room (ID: ${mex.roomId})`,
+                `User ${mex.user.split("#AT#")[0]} left the room (ID: ${mex.roomId})`,
                 "System"
               );
             } else if (mex.type == "START") {
@@ -197,12 +201,14 @@
               document
                 .getElementById("myRange2")
                 .setAttribute("max", mex.points[myId]);
+
+              console.log(mex.points)
               for (let key in mex.points) {
                 if (mex.points.hasOwnProperty(key)) {
 
                   let value = mex.points[key];
                   writeOnChat(
-                    `Player: ${key} has now: ${value} points!`,
+                    `Player: ${key.split("#AT#")[0]} has now: ${value} points!`,
                     "System"
 
                   );
@@ -224,9 +230,14 @@
                   }
                 }
               }
+              /*
               document.getElementById(
                 "winner"
-              ).textContent = `WINNER: ${winner}! Total points: ${max}!`;
+              ).textContent = `WINNER: ${winner}! Total points: ${max}!`;*/
+              writeOnChat(
+                `Player ${winner.split("#AT#")[0]} is the winner! Total points: ${max}!`,
+                "System"
+              );
               writeOnChat(
                 `The lobby will remain open for a new match!\nIf you don't want to play with the same players, please search another room. `,
                 "System"
@@ -347,7 +358,7 @@
 
         socket.emit(
           "message",
-          JSON.stringify({ header: [], type: "SEARCHGAME", id: myId })
+          JSON.stringify({ header: [], type: "SEARCHGAME", id: myId + "#AT#" + getCookie("avatar") })
         );
       }
 
@@ -359,7 +370,7 @@
 
         socket.emit(
           "message",
-          JSON.stringify({ header: [], type: "LEAVEGAME", id: myId })
+          JSON.stringify({ header: [], type: "LEAVEGAME", id: myId + "#AT#" + getCookie("avatar")})
         );
       }
 
@@ -679,17 +690,26 @@
           <button id="leave" onclick="leaveRoom()">Leave the game room!</button>
           <div class="cellcontainerScore">
             <div class="cell-scoreboard">
-              <div id="player1NameDiv" style="color: white">Player1</div>
+              <div id="player1NameDiv" style="color: white">
+                <img src="./static/assets/playerIcons/user.png"
+                style="width: 45px; height: 100%">
+                <p>Player1</p></div>
               <hr width="80%" color="white" />
               <div id="player1ScoreDiv" style="color: white">100</div>
             </div>
             <div class="cell-scoreboard">
-              <div id="player2NameDiv" style="color: white">Player2</div>
+              <div id="player2NameDiv" style="color: white">
+                <img src="./static/assets/playerIcons/user.png"
+                style="width: 45px; height: 100%;">
+                <p>Player2</p></div>
               <hr width="80%" color="white" />
               <div id="player2ScoreDiv" style="color: white">100</div>
             </div>
             <div class="cell-scoreboard">
-              <div id="player3NameDiv" style="color: white">Player3</div>
+              <div id="player3NameDiv" style="color: white">
+                <img src="./static/assets/playerIcons/user.png"
+                style="width: 45px; height: 100%">
+                <p>Player3</p></div>
               <hr width="80%" color="white" />
               <div id="player3ScoreDiv" style="color: white">100</div>
             </div>
