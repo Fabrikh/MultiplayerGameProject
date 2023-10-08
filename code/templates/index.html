@@ -140,20 +140,8 @@
           if (mex.type == "INVALID") {
             isValid = false;
             username = null;
-            alert("Username already in use, please use another one");
             while (!isValid) {
-              username = prompt(
-                "Please enter your username (only letters and numbers allowed):"
-              );
-              if (username !== null && username.trim() !== "") {
-                isValid = isValidUsername(username);
-                if (!isValid)
-                  alert(
-                    "Invalid username. Please use only letters and numbers."
-                  );
-              } else {
-                alert("You must enter a valid username to continue.");
-              }
+              alert("This username is already in use in another active session. Please close that session and reload the browser before proceeding.");
             }
 
             myId = username;
