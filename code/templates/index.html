@@ -187,7 +187,6 @@
                 .getElementById("myRange2")
                 .setAttribute("max", mex.points[myId + "#AT#" + getCookie("avatar")]);
 
-              console.log(mex.points)
               for (let key in mex.points) {
                 if (mex.points.hasOwnProperty(key)) {
 
@@ -209,9 +208,7 @@
               for (let key in mex.points) {
                 if (mex.points.hasOwnProperty(key)) {
                   let value = mex.points[key];
-                  console.log("Key: ", key)
                   if (key.indexOf(username) !== -1){
-                    console.log("String contains ", username);
                     myScore = mex.points[key] + "";
                   }
 
@@ -259,7 +256,6 @@
       function saveScore(score) {
         const username = getCookie("username");
         const url = "http://localhost:4000/endgame";
-        console.log("Score: ", score, "username", username)
         const data = { score: score, username: username };
         const headers = {
           "Content-Type": "application/json",
@@ -333,11 +329,6 @@
 
         myVideo.load();
         myVideo.play();
-
-        console.log({
-          src: source.getAttribute("src"),
-          type: source.getAttribute("type"),
-        });
       }
 
       function searchRoom() {
@@ -491,7 +482,8 @@
                 <span class="rangevalue" id="rangeValue">0</span>
                 <input class="range" type="range" name "" value="0" min="0"
                 max="100"
-                onChange="rangeSlide(this.value);document.querySelector('#bet').disabled= false;" onmousemove="rangeSlide(this.value)" id="myRange"/>
+                onChange="rangeSlide(this.value);document.querySelector('#bet').disabled=
+                false;" onmousemove="rangeSlide(this.value)" id="myRange"/>
               </div>
               <script type="text/javascript">
                 function rangeSlide(value) {
