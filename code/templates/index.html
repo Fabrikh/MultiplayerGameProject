@@ -119,14 +119,11 @@
 
         myId = getCookie("username");
         avatar = getCookie("avatar");
-        console.log("ID: ", myId);
-        console.log("avatar", avatar);
 
         socket = io.connect("http://localhost:" + {{SOCKET_PORT}}+'/');
 
         // WebSocket connection event
         socket.on("connect", function () {
-          console.log("Connected to the WebSocket server");
 
           var connection = {
             type: "CONNECTION",
@@ -143,20 +140,8 @@
           if (mex.type == "INVALID") {
             isValid = false;
             username = null;
-            alert("Username already in use, please use another one");
             while (!isValid) {
-              username = prompt(
-                "Please enter your username (only letters and numbers allowed):"
-              );
-              if (username !== null && username.trim() !== "") {
-                isValid = isValidUsername(username);
-                if (!isValid)
-                  alert(
-                    "Invalid username. Please use only letters and numbers."
-                  );
-              } else {
-                alert("You must enter a valid username to continue.");
-              }
+              alert("This username is already in use in another active session. Please close that session and reload the browser before proceeding.");
             }
 
             myId = username;
@@ -215,15 +200,21 @@
                 }
               }
               updateScoreDisplay(mex.points);
-  
-            } else if (mex.type == "ENDGAME") {
 
-              saveScore();
+            } else if (mex.type == "ENDGAME") {
               let max = 0;
               let winner;
+              let myScore = 0;
+              let username = getCookie("username");
               for (let key in mex.points) {
                 if (mex.points.hasOwnProperty(key)) {
                   let value = mex.points[key];
+                  console.log("Key: ", key)
+                  if (key.indexOf(username) !== -1){
+                    console.log("String contains ", username);
+                    myScore = mex.points[key] + "";
+                  }
+
                   if (value >= max) {
                     max = value;
                     winner = key;
@@ -242,6 +233,7 @@
                 `The lobby will remain open for a new match!\nIf you don't want to play with the same players, please search another room. `,
                 "System"
               );
+              saveScore(myScore);
             } else if (mex.type == "DICE") {
               let dice1 = mex.dice1;
               let dice2 = mex.dice2;
@@ -253,10 +245,7 @@
                 writeOnChat(`${mex.message}`, "System");
 
               } else {
-
                 writeOnChat(`${mex.message}`, mex.id, mex.avatar);
-                console.log("Avatar: ", mex);
-                
               }
             }
           }
@@ -267,10 +256,11 @@
         });
       }
 
-      function saveScore() {
-        console.log("SAVING SCORE...")
+      function saveScore(score) {
+        const username = getCookie("username");
         const url = "http://localhost:4000/endgame";
-        const data = { score: 100 };
+        console.log("Score: ", score, "username", username)
+        const data = { score: score, username: username };
         const headers = {
           "Content-Type": "application/json",
         };
@@ -397,17 +387,17 @@
           "YOU BET " + placedBet2 + " OVER " + betValue2 + "!";
 
         element.disabled = true;
-      
+
       }
 
       function setValue(value) {
         betValue = value;
-        document.querySelector("#bet").disabled = false; 
+        document.querySelector("#bet").disabled = false;
       }
 
       function setValue2(element) {
         betValue2 = element.id.substr(8);
-        document.querySelector("#bet").disabled = false; 
+        document.querySelector("#bet").disabled = false;
       }
     </script>
   </head>
@@ -500,8 +490,9 @@
               <div class="rangediv">
                 <span class="rangevalue" id="rangeValue">0</span>
                 <input class="range" type="range" name "" value="0" min="0"
-                max="100" onChange="rangeSlide(this.value);document.querySelector('#bet').disabled = false;"
-                onmousemove="rangeSlide(this.value)" id="myRange"/>
+                max="100"
+                onChange="rangeSlide(this.value);document.querySelector('#bet').disabled
+                = false;" onmousemove="rangeSlide(this.value)" id="myRange"/>
               </div>
               <script type="text/javascript">
                 function rangeSlide(value) {
@@ -664,8 +655,9 @@
               <div class="rangediv">
                 <span class="rangevalue" id="rangeValue2">0</span>
                 <Input class="range" type="range" name "" value="0" min="0"
-                max="100" onChange="rangeSlide2(this.value);document.querySelector('#bet').disabled = false;"
-                onmousemove="rangeSlide2(this.value)" id="myRange2"/>
+                max="100"
+                onChange="rangeSlide2(this.value);document.querySelector('#bet').disabled
+                = false;" onmousemove="rangeSlide2(this.value)" id="myRange2"/>
               </div>
               <script type="text/javascript">
                 function rangeSlide2(value) {
@@ -677,10 +669,9 @@
           <br />
           <button id="bet" onclick="bet(this)">BET!</button>
 
-          
           <h2 id="recap" style="color: white" hidden></h2>
           <h2 id="recap2" style="color: white" hidden></h2>
-          
+
           <h2 id="winner" style="color: white" hidden></h2>
         </div>
         <div class="col-md-6 px-5">
@@ -691,25 +682,34 @@
           <div class="cellcontainerScore">
             <div class="cell-scoreboard">
               <div id="player1NameDiv" style="color: white">
-                <img src="./static/assets/playerIcons/user.png"
-                style="width: 45px; height: 100%">
-                <p>Player1</p></div>
+                <img
+                  src="./static/assets/playerIcons/user.png"
+                  style="width: 45px; height: 100%"
+                />
+                <p>Player1</p>
+              </div>
               <hr width="80%" color="white" />
               <div id="player1ScoreDiv" style="color: white">100</div>
             </div>
             <div class="cell-scoreboard">
               <div id="player2NameDiv" style="color: white">
-                <img src="./static/assets/playerIcons/user.png"
-                style="width: 45px; height: 100%;">
-                <p>Player2</p></div>
+                <img
+                  src="./static/assets/playerIcons/user.png"
+                  style="width: 45px; height: 100%"
+                />
+                <p>Player2</p>
+              </div>
               <hr width="80%" color="white" />
               <div id="player2ScoreDiv" style="color: white">100</div>
             </div>
             <div class="cell-scoreboard">
               <div id="player3NameDiv" style="color: white">
-                <img src="./static/assets/playerIcons/user.png"
-                style="width: 45px; height: 100%">
-                <p>Player3</p></div>
+                <img
+                  src="./static/assets/playerIcons/user.png"
+                  style="width: 45px; height: 100%"
+                />
+                <p>Player3</p>
+              </div>
               <hr width="80%" color="white" />
               <div id="player3ScoreDiv" style="color: white">100</div>
             </div>

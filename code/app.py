@@ -539,7 +539,7 @@ def index():
     error = request.cookies.get('error_wrong_credentials')
     if(request.args.get('redirected')):
         if(not username):
-            return render_template('login.html', SOCKET_PORT=sys.argv[1], error=error)
+            return render_template('login.html', error=error)
         else:
             return render_template('index.html', SOCKET_PORT=sys.argv[1], cookies=username)
 
@@ -551,11 +551,14 @@ def register():
 @app.route('/dashboard')
 def dashboard():
     username = request.cookies.get('username')  
-    avatar = request.cookies.get('avatar')  
+    avatar = request.cookies.get('avatar')
+    highscore = request.cookies.get('highscore')  
+    played_games = request.cookies.get('played_games')    
+    score = request.cookies.get('score')   
     if(username and avatar):
-        return render_template("dashboard.html", username=username, avatar=avatar)
+        return render_template("dashboard.html", username=username, avatar=avatar, highscore=highscore, played_games=played_games, score = score)
     else:
-        return render_template('login.html', SOCKET_PORT=sys.argv[1])
+        return render_template('login.html')
     
 @app.route('/api/deliver', methods=['POST'])
 def deliver_message():
