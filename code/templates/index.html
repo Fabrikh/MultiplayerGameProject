@@ -182,10 +182,10 @@
               writeOnChat(`THE DRAWN NUMBER IS: ${mex.total}!`, "System");
               document
                 .getElementById("myRange")
-                .setAttribute("max", mex.points[myId]);
+                .setAttribute("max", mex.points[myId + "#AT#" + getCookie("avatar")]);
               document
                 .getElementById("myRange2")
-                .setAttribute("max", mex.points[myId]);
+                .setAttribute("max", mex.points[myId + "#AT#" + getCookie("avatar")]);
 
               console.log(mex.points)
               for (let key in mex.points) {
@@ -491,8 +491,7 @@
                 <span class="rangevalue" id="rangeValue">0</span>
                 <input class="range" type="range" name "" value="0" min="0"
                 max="100"
-                onChange="rangeSlide(this.value);document.querySelector('#bet').disabled
-                = false;" onmousemove="rangeSlide(this.value)" id="myRange"/>
+                onChange="rangeSlide(this.value);document.querySelector('#bet').disabled= false;" onmousemove="rangeSlide(this.value)" id="myRange"/>
               </div>
               <script type="text/javascript">
                 function rangeSlide(value) {
