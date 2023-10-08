@@ -482,7 +482,7 @@ class Room():
             if total == finalBetValue:
                 self.points[self.socketsToUsers[player]] += multipliers[finalBetValue] * int(self.placedBet2[player])
             else:
-                self.points[self.socketsToUsers[player]] -= int(self.placedBet[player])
+                self.points[self.socketsToUsers[player]] -= int(self.placedBet2[player])
             
         eprint("####",self.points)
 
