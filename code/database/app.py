@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, redirect, render_template,make_response, session, url_for
+from flask_cors import CORS
 import requests
 import sys
 import json
@@ -9,6 +10,16 @@ app = Flask(__name__)
 
 app.secret_key = "app secret key"
 
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:3004",
+    "http://localhost:3005"
+]
+
+CORS(app, resources={r"/endgame": {"origins": allowed_origins}})
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -45,6 +56,14 @@ def register():
         """
 
         cursor.execute(insert_query, (username, password, avatarId))
+        conn.commit()
+        
+        cursor = conn.cursor()
+        insert_query = """
+        INSERT INTO scores (highscore, playedGames, username)
+        VALUES (?, ?, ?)
+        """
+        cursor.execute(insert_query, ("0", "0", username))
         conn.commit()
         conn.close()
 
@@ -92,29 +111,56 @@ def login():
 @app.route("/endgame", methods=["POST"])
 def endgame():
     try:
+        data = request.json
+        lastScore = data['score']
+        username = data['username']
+
         conn = sqlite3.connect("userDB.db")
         cursor = conn.cursor()
 
-        # username = request.cookies.get('username') 
-        username = "user01" 
         scoreQuery = "SELECT * FROM scores WHERE username = ?"
         cursor.execute(scoreQuery, (username,))
         score = cursor.fetchone()
-       
-        if(score): 
-            insert_query = """
-            INSERT INTO scores (highscore, playedGames, username)
-            VALUES (?, ?, ?)
-            """
-            cursor.execute(insert_query, ("100", "100" , username))
+
+        highscore_value = score[1] 
+        played_games_value = score[2] if score else '0'
+
+        played_games_value = str(int(played_games_value) + 1)
+
+        score_as_int = int(lastScore)
+        highscore_as_int = int(highscore_value)
+
+        if(score_as_int > highscore_as_int):
+            highscore_value = lastScore
+
+        update_query = """
+        UPDATE scores
+        SET highscore = ?, playedGames = ?
+        WHERE username = ?
+        """
+        cursor.execute(update_query, (highscore_value, played_games_value, username))
           
         conn.commit()
         conn.close()
-        return 200
+        response = {'message': 'User added successfully'}
+        return jsonify(response), 201 
 
     except Exception as e:
         response = {"error": str(e)}
         return jsonify(response), 400  # HTTP 400 Bad Request status code
+
+@app.route("/scores", methods=["GET"])
+def get_scores():
+    conn = sqlite3.connect("userDB.db")
+    cursor = conn.cursor()
+
+    query = "SELECT * FROM scores"
+    cursor.execute(query)
+    scores = cursor.fetchall()
+
+    conn.close()
+
+    return jsonify(scores)
 
 @app.route("/users", methods=["GET"])
 def get_all_users():
@@ -144,8 +190,8 @@ def user_dashboard():
     scoreQuery = "SELECT * FROM scores WHERE username = ?"
     cursor.execute(scoreQuery, (username,))
     score = cursor.fetchone()
-    highscore_value = score[0] if score else '0'
-    played_games_value = score[1] if score else '0'
+    highscore_value = score[1] if score else '0'
+    played_games_value = score[2] if score else '0'
 
     conn.close()
 
